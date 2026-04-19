@@ -1,0 +1,16 @@
+{
+  "name": "agents-101",
+  "type": "module",
+  "private": true,
+  "packageManager": "bun@1.1.38",
+  "scripts": {
+    "build": "slidev build",
+    "dev": "slidev --open",
+    "export": "slidev export",
+    "export:notes": "slidev export-notes"
+  },
+  "dependencies": {
+    "@slidev/cli": "^0.50.0",
+    "@slidev/theme-default": "^0.25.0"
+  }
+}
