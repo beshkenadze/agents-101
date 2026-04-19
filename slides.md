@@ -4,7 +4,6 @@ title: Agents 101
 info: From a simple API call to a working AI agent — step by step.
 author: Aleksandr Beshkenadze
 presenter: true
-download: true
 exportFilename: agents-101
 canvasWidth: 1920
 htmlAttrs:
