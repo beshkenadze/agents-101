@@ -285,6 +285,38 @@ When a model replies with free text, it is fine for chat — but not for code. Y
 -->
 
 ---
+title: Tool calls are structured output
+path: "/02-structured/tool-call"
+meta: "§ 02 · the bridge"
+status: "§ bridge"
+---
+
+<div class="kicker">how structured output and tools connect</div>
+
+<h2 class="heading" style="font-size: 68px;">A tool call is<br/>structured output + execute.</h2>
+
+<pre class="ascii" style="font-size: 22px; line-height: 1.7; margin-top: 24px;">  <span style="color: var(--fg-dim);">model reply (structured):</span>
+    { "tool": "getWorkExperience", "params": { "userId": "42" } }
+                            <em>│</em>
+                            <em>▼</em>
+  <span style="color: var(--fg-dim);">runtime executes:</span>  getWorkExperience({ userId: "42" })
+                            <em>│</em>
+                            <em>▼</em>
+  <span style="color: var(--fg-dim);">result →</span>  next model call</pre>
+
+<p class="body" style="margin-top: 32px; font-size: 24px;" v-click>The model doesn't <em style="color: var(--accent); font-style: normal;">call</em> anything — it <strong>asks</strong> in JSON. Your code calls.</p>
+
+<!--
+Quick bridge between structured output and tools.
+
+A tool call is just structured output that the runtime executes. The model reads the tool description and the parameter schema, and returns JSON: "I want to call this tool with these params". The model itself does not call anything. Your code does.
+
+This is why tools look like generateObject under the hood — same engine, same Zod. The runtime then executes the function and feeds the result back.
+
+[click] Remember: the model asks, your code calls.
+-->
+
+---
 title: Tools
 path: "/02-tools"
 meta: "§ 02 · tools"
@@ -398,7 +430,7 @@ status: "§ orchestration"
 <h2 class="heading" style="font-size: 72px; margin-bottom: 24px;">Three ways to compose.</h2>
 
 <div class="tri">
-<div class="card" v-click="1">
+<div class="card">
 <span class="idx">01 · supervisor</span>
 <h4>Supervisor</h4>
 <p>One lead agent breaks the task down and dispatches to specialists.</p>
@@ -410,7 +442,7 @@ status: "§ orchestration"
       │A │  │B │
       └──┘  └──┘</pre>
 </div>
-<div class="card" v-click="2">
+<div class="card">
 <span class="idx">02 · swarm</span>
 <h4>Swarm</h4>
 <p>Agents run in parallel. No boss. Results merge at the end.</p>
@@ -421,7 +453,7 @@ status: "§ orchestration"
          ▼
        merge</pre>
 </div>
-<div class="card" v-click="3">
+<div class="card">
 <span class="idx">03 · router</span>
 <h4>Router</h4>
 <p>Reads the request, hands it to the right specialist. Doesn't execute.</p>
@@ -433,16 +465,16 @@ status: "§ orchestration"
 </div>
 </div>
 
-<p class="rule-center" v-click="4">In real life you mix them: a workflow step that is an agent with a supervisor inside.</p>
+<p class="rule-center" v-click>In real life you mix them: a workflow step that is an agent with a supervisor inside.</p>
 
 <!--
-But one agent is rarely enough. There are three main patterns.
+But one agent is rarely enough. There are three main patterns — look at them side by side.
 
-[click] Supervisor. One main agent splits the task and sends parts to other agents. It gets a task, breaks it down, sends parts to a writer agent and a researcher agent, and collects the results. The supervisor makes decisions. The others do the work.
+Supervisor: one lead agent splits the task and sends parts to specialists. The lead decides, the others do the work.
 
-[click] Swarm. Agents work in parallel. No boss. Each does its part. Results merge at the end. Good for tasks that split into independent parts.
+Swarm: agents run in parallel, no boss, results merge at the end. Good for independent sub-tasks.
 
-[click] Router. One agent only routes. It reads the request and decides who gets it: code goes to a coder agent, text goes to a writer agent. The router does no work itself. It only directs.
+Router: one agent only routes — reads the request, picks the specialist. It doesn't do the work itself.
 
 [click] In practice, we mix these. A workflow with a few steps, where one step is an agent with a supervisor inside. You don't have to pick only one.
 -->
@@ -463,6 +495,39 @@ class: 'center-v'
 
 <!--
 Okay, let's put it all together. I wrote a small app — a chat where you can generate a CV. Under the hood there are two backends: one uses a workflow, the other uses an agent. I will show both, and we will compare.
+-->
+
+---
+title: Demo architecture
+path: "/demo/architecture"
+meta: "§ 04 · two paths"
+status: "§ two backends"
+---
+
+<div class="kicker">same input · same output · two paths</div>
+
+<h2 class="heading" style="font-size: 64px;">One chat,<br/>two backends.</h2>
+
+<pre class="ascii" style="font-size: 22px; line-height: 1.8; margin-top: 24px;">                         <span style="color: var(--accent);">A · workflow</span>  <em>→</em>  step · step · step      <em>─┐</em>
+  free-form chat  <em>──┤</em>                                              <em>├──▶</em>  { name, skills, jobs }
+                         <span style="color: var(--accent);">B · agent</span>     <em>→</em>  tools + loop            <em>─┘</em></pre>
+
+<div class="tag-row" style="margin-top: 32px;">
+<span class="tag" v-click="1"><span class="dot-s"></span>UI doesn't know which backend ran</span>
+<span class="tag" v-click="2"><span class="dot-s"></span>we switch with a flag</span>
+<span class="tag" v-click="3"><span class="dot-s"></span>same CV shape either way</span>
+</div>
+
+<!--
+Quick look at the app before we open the code.
+
+The user types in the chat. The request goes to one of two backends — workflow or agent. Both return the same CV object: name, skills, jobs.
+
+[click] The UI doesn't know which backend ran.
+
+[click] We switch with a flag in the request.
+
+[click] The output shape is identical. That's what lets us compare fairly — same input, same output, different paths.
 -->
 
 ---
@@ -582,7 +647,7 @@ Now the same request — but through an agent. The agent gets two tools: extract
 
 [click] But we pay more tokens.
 
-The CV generator is actually a good case for a workflow — the steps are known. But if the task grows — say, the agent has to decide to look up the company or to ask the user — then you need an agent.
+Both work. Workflow wins when the steps are fixed. Agent wins when we add something like "google the company if you don't know it" — that path you can't draw up front.
 -->
 
 ---
@@ -604,10 +669,10 @@ status: "end of deck"
 <span class="k">agent</span><span class="v">when the path is unknown · mind the risks</span>
 </div>
 <div style="display: flex; flex-direction: column; align-items: flex-start; justify-content: center; gap: 20px;">
-<div class="qr-block">QR<br/>PLACEHOLDER</div>
+<div class="qr-block"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 37 37" shape-rendering="crispEdges" style="width:100%;height:100%;display:block;"><path fill="#ffffff" d="M0 0h37v37H0z"/><path stroke="#000000" d="M4 4.5h7m3 0h2m1 0h4m2 0h1m2 0h7M4 5.5h1m5 0h1m1 0h1m1 0h2m1 0h8m1 0h1m5 0h1M4 6.5h1m1 0h3m1 0h1m2 0h3m3 0h2m1 0h1m1 0h1m1 0h1m1 0h3m1 0h1M4 7.5h1m1 0h3m1 0h1m3 0h2m3 0h2m1 0h1m3 0h1m1 0h3m1 0h1M4 8.5h1m1 0h3m1 0h1m1 0h1m1 0h3m2 0h1m1 0h3m2 0h1m1 0h3m1 0h1M4 9.5h1m5 0h1m3 0h1m2 0h1m1 0h1m1 0h1m1 0h2m1 0h1m5 0h1M4 10.5h7m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h7M13 11.5h1m1 0h1m1 0h5m2 0h1M4 12.5h1m1 0h1m1 0h1m1 0h1m3 0h1m2 0h2m2 0h1m2 0h1m3 0h1m2 0h1M5 13.5h1m2 0h1m2 0h2m1 0h5m1 0h3m1 0h3m2 0h1m2 0h1M7 14.5h1m1 0h2m2 0h1m4 0h1m1 0h1m3 0h1m3 0h1m1 0h3M5 15.5h2m1 0h1m2 0h1m5 0h1m2 0h3m1 0h1m1 0h3m2 0h1M4 16.5h1m1 0h1m2 0h2m1 0h2m3 0h5m1 0h4m2 0h1m1 0h2M4 17.5h1m3 0h1m2 0h8m1 0h2m3 0h2m2 0h1m2 0h1M4 18.5h7m1 0h2m4 0h1m2 0h2m2 0h3m1 0h1m1 0h2M4 19.5h1m4 0h1m3 0h1m3 0h5m1 0h2m2 0h1m1 0h1m1 0h1M5 20.5h1m1 0h7m2 0h3m1 0h3m1 0h4m1 0h1m1 0h2M9 21.5h1m4 0h1m1 0h1m3 0h1m3 0h3m2 0h2m1 0h1M4 22.5h1m3 0h3m3 0h1m1 0h2m3 0h1m2 0h2m1 0h2m2 0h2M5 23.5h1m1 0h1m3 0h1m1 0h1m1 0h4m1 0h2m3 0h2m2 0h1m1 0h1M4 24.5h1m3 0h4m1 0h1m2 0h1m1 0h1m1 0h2m1 0h6M12 25.5h1m1 0h2m4 0h1m3 0h1m3 0h1m1 0h3M4 26.5h7m2 0h1m1 0h3m4 0h3m1 0h1m1 0h2m1 0h2M4 27.5h1m5 0h1m8 0h1m1 0h2m1 0h1m3 0h2M4 28.5h1m1 0h3m1 0h1m1 0h5m3 0h2m2 0h5M4 29.5h1m1 0h3m1 0h1m2 0h1m1 0h3m2 0h1m2 0h1m3 0h2m1 0h3M4 30.5h1m1 0h3m1 0h1m1 0h1m2 0h1m1 0h2m2 0h1m1 0h2m2 0h3m2 0h1M4 31.5h1m5 0h1m4 0h1m1 0h1m2 0h6m1 0h2m2 0h1M4 32.5h7m1 0h1m1 0h4m1 0h8m1 0h1m2 0h2"/></svg></div>
 <div style="font-size: 18px; color: var(--fg-dim); letter-spacing: 0.08em;">
-<div style="color: var(--accent); margin-bottom: 4px;">&gt; scan for repo &amp; docs</div>
-github.com/beshkenadze/agents-101
+<div style="color: var(--accent); margin-bottom: 4px;">&gt; scan for the deck</div>
+beshkenadze.github.io/agents-101
 </div>
 </div>
 </div>
