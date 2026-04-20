@@ -10,7 +10,7 @@ import {
 	getWorkflowState,
 	setWorkflowState,
 } from "@/lib/backends/workflow-state";
-import { runWorkflow } from "@/lib/backends/workflow";
+import { cvWorkflow } from "@/lib/workflows/cv-workflow";
 import { mastra } from "@/lib/mastra";
 import { CVSchema } from "@/lib/schemas";
 
@@ -128,42 +128,91 @@ export async function POST(req: Request) {
 					return;
 				}
 
-				// Run one turn of the workflow: extract → merge → validate → decide.
+				// Run one turn of the Mastra workflow: extract → merge → validate
+				// → branch(ask|ready). Map each step id to a numbered UI block.
+				const STEP_MAP: Record<string, { step: number; label: string }> = {
+					extract: { step: 1, label: "extract fields from message" },
+					merge: { step: 2, label: "merge into draft" },
+					validate: { step: 3, label: "validate draft" },
+					"ask-field": { step: 4, label: "pick next question" },
+					ready: { step: 4, label: "ready for PDF" },
+				};
+
 				let finalDraft = state.draft;
-				for await (const event of runWorkflow(userText, state.draft)) {
-					if (event.kind === "step-start") {
-						writer.write({
-							type: "data-workflow-step",
-							id: `step-${event.step}`,
-							data: {
-								step: event.step,
-								label: event.label,
-								status: "running",
-							},
-						});
-					} else if (event.kind === "step-done") {
-						writer.write({
-							type: "data-workflow-step",
-							id: `step-${event.step}`,
-							data: { step: event.step, label: "", status: "done" },
-						});
-					} else if (event.kind === "draft-updated") {
-						finalDraft = event.draft;
-						writer.write({
-							type: "data-cv",
-							id: "cv",
-							data: event.draft,
-						});
-					} else if (event.kind === "ask-field") {
-						const id = crypto.randomUUID();
-						writer.write({ type: "text-start", id });
-						writer.write({
-							type: "text-delta",
-							id,
-							delta: event.question,
-						});
-						writer.write({ type: "text-end", id });
-					} else if (event.kind === "ready") {
+				let finalResult: {
+					merged: typeof state.draft;
+					valid: boolean;
+					issue: string | null;
+					question: string | null;
+				} | null = null;
+
+				const run = await cvWorkflow.createRun();
+				const wfStream = await run.stream({
+					inputData: { userText, draft: state.draft },
+				});
+
+				for await (const chunk of wfStream) {
+					const payload = (chunk as { payload?: unknown }).payload as
+						| { stepId?: string; result?: unknown }
+						| undefined;
+					const stepId = payload?.stepId;
+
+					if (chunk.type === "workflow-step-start" && stepId) {
+						const meta = STEP_MAP[stepId];
+						if (meta) {
+							writer.write({
+								type: "data-workflow-step",
+								id: `step-${stepId}`,
+								data: {
+									step: meta.step,
+									label: meta.label,
+									status: "running",
+								},
+							});
+						}
+					} else if (
+						(chunk.type === "workflow-step-result" ||
+							chunk.type === "workflow-step-finish") &&
+						stepId
+					) {
+						const meta = STEP_MAP[stepId];
+						if (meta) {
+							writer.write({
+								type: "data-workflow-step",
+								id: `step-${stepId}`,
+								data: { step: meta.step, label: "", status: "done" },
+							});
+						}
+						// Capture intermediate draft after merge for early preview.
+						if (stepId === "merge") {
+							const merged = (payload?.result as { merged?: typeof state.draft })
+								?.merged;
+							if (merged) {
+								finalDraft = merged;
+								writer.write({ type: "data-cv", id: "cv", data: merged });
+							}
+						}
+						// Either ask-field or ready is the final branch step.
+						if (stepId === "ask-field" || stepId === "ready") {
+							finalResult = payload?.result as typeof finalResult;
+						}
+					}
+				}
+
+				// Fallback: if we didn't capture the final result from step events,
+				// read it from the finished stream.
+				if (!finalResult) {
+					const done = await wfStream.result;
+					const raw = (done as { result?: unknown }).result as
+						| Record<string, typeof finalResult>
+						| undefined;
+					finalResult =
+						raw?.["ask-field"] ?? raw?.ready ?? (raw as typeof finalResult);
+				}
+
+				if (finalResult) {
+					finalDraft = finalResult.merged;
+					if (finalResult.valid) {
 						writer.write({
 							type: "data-confirm",
 							id: "confirm",
@@ -181,13 +230,13 @@ export async function POST(req: Request) {
 							delta: "CV ready — confirm to generate the PDF.",
 						});
 						writer.write({ type: "text-end", id });
-					} else if (event.kind === "error") {
+					} else if (finalResult.question) {
 						const id = crypto.randomUUID();
 						writer.write({ type: "text-start", id });
 						writer.write({
 							type: "text-delta",
 							id,
-							delta: `**error:** ${event.message}`,
+							delta: finalResult.question,
 						});
 						writer.write({ type: "text-end", id });
 					}
