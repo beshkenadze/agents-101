@@ -38,7 +38,7 @@ Hi, I'm Aleksandr.
 
 In 20 minutes we go from one LLM API call to a working AI agent.
 
-[click] The stack is TypeScript, Vercel AI SDK for the models, and Mastra as the agent framework. At the end, we build a CV generator live.
+The stack is TypeScript, Vercel AI SDK for the models, and Mastra as the agent framework. At the end, we look at a CV generator demo and compare two backends.
 -->
 
 ---
@@ -110,9 +110,7 @@ const { text } = await generateText({
 <p class="body" style="margin-top: 32px; font-size: 22px;">Send a prompt. Get a string back. That's it.</p>
 
 <!--
-Let's start with the simplest thing.
-
-[click] Completion is one call. You send a prompt, you get text back.
+Let's start with the simplest thing. Completion is one call. You send a prompt, you get text back.
 
 Here is the AI SDK. We call generateText, we pass a model, and we pass a prompt: "rewrite my work experience nicely". We get a string. That's it.
 -->
@@ -369,7 +367,7 @@ A tool is a function the model can call itself. It has a name, a description, a 
 
 [click] It decides the tool fits the task.
 
-[click] It fills the parameters from the Zod schema.
+[click] It fills the inputSchema — the Zod schema — with arguments.
 
 [click] Execute runs, and the result goes back to the model.
 
@@ -698,13 +696,13 @@ export const memory = new Memory({
 
 <p class="lead" style="font-size: 26px; max-width: 36ch;">Mastra injects the current draft into every turn. Agent writes it back via <code>updateWorkingMemory</code>.</p>
 
-<ul class="checks" style="margin-top: 20px;" v-click>
-<li>Turn 1 fills <code>name</code>, <code>skills</code></li>
-<li>Turn 2 fills <code>jobs</code> — turn 1 is remembered</li>
-<li>Turn 3 confirms — agent reads memory, calls <code>generatePdf</code></li>
+<ul class="checks" style="margin-top: 20px;">
+<li v-click="1">Turn 1 fills <code>name</code>, <code>skills</code></li>
+<li v-click="2">Turn 2 fills <code>jobs</code> — turn 1 is remembered</li>
+<li v-click="3">Turn 3 confirms — agent reads memory, calls <code>generatePdf</code></li>
 </ul>
 
-<p class="body" style="margin-top: 24px;" v-click>Same <code>DraftCVSchema</code> the workflow uses. <span style="color: var(--accent)">One Zod schema, three call-sites.</span></p>
+<p class="body" style="margin-top: 24px;" v-click="4">Same <code>DraftCVSchema</code> the workflow uses. <span style="color: var(--accent)">One Zod schema, three call-sites.</span></p>
 
 <!--
 One more thing worth showing — working memory.
