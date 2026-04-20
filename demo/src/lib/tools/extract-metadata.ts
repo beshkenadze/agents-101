@@ -15,7 +15,11 @@ export const extractMetadata = createTool({
 		text: z.string().describe("User's original free-form description"),
 	}),
 	outputSchema: DraftCVSchema,
-	execute: async ({ context }) => {
+	execute: async (rawInput: unknown) => {
+		const input =
+			rawInput && typeof rawInput === "object" && "context" in rawInput
+				? (rawInput as { context: { text: string } }).context
+				: (rawInput as { text: string });
 		const { object } = await generateObject({
 			model: extractorModel,
 			schema: DraftCVSchema,
@@ -24,7 +28,7 @@ export const extractMetadata = createTool({
 				"Omit any field you cannot infer — never invent a name, company, role, or dates.",
 				"",
 				"Message:",
-				context.text,
+				input.text,
 			].join("\n"),
 		});
 		return object;

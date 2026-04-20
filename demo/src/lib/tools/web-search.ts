@@ -16,14 +16,17 @@ export const webSearch = createTool({
 		query: z.string().describe("Focused search query, 3-8 words"),
 	}),
 	outputSchema: z.object({ results: z.array(SearchResultSchema) }),
-	execute: async ({ context }) => {
+	execute: async (rawInput: unknown) => {
+		const input =
+			rawInput && typeof rawInput === "object" && "context" in rawInput
+				? (rawInput as { context: { query: string } }).context
+				: (rawInput as { query: string });
+
 		const apiKey = process.env.FIRECRAWL_API_KEY;
-		if (!apiKey) {
-			return { results: [], note: "FIRECRAWL_API_KEY missing — skipped" };
-		}
+		if (!apiKey) return { results: [] };
 
 		const app = new Firecrawl({ apiKey });
-		const res = await app.search(context.query, { limit: 3 });
+		const res = await app.search(input.query, { limit: 3 });
 
 		const web = res.data?.web ?? [];
 		return {
