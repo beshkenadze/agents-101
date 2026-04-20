@@ -34,18 +34,21 @@ export type CV = z.infer<typeof CVSchema>;
 // Derived from CVSchema; used by extractMetadata output and working memory.
 // A draft can grow turn-by-turn until CVSchema.safeParse passes.
 
+// All fields nullable (not optional) so OpenAI strict-mode schemas list every
+// property in `required[]`. The agent / extractor returns `null` for unknown
+// fields; `mergeDraft` treats null and undefined the same via `??`.
 export const DraftJobSchema = z.object({
-	company: z.string().optional(),
-	role: z.string().optional(),
-	years: z.string().optional(),
-	highlights: z.array(z.string()).max(4).optional(),
+	company: z.string().nullable(),
+	role: z.string().nullable(),
+	years: z.string().nullable(),
+	highlights: z.array(z.string()).max(4).nullable(),
 });
 
 export const DraftCVSchema = z.object({
-	name: z.string().optional(),
-	headline: z.string().optional(),
-	skills: z.array(z.string()).optional(),
-	jobs: z.array(DraftJobSchema).optional(),
+	name: z.string().nullable(),
+	headline: z.string().nullable(),
+	skills: z.array(z.string()).nullable(),
+	jobs: z.array(DraftJobSchema).nullable(),
 });
 
 export type DraftCV = z.infer<typeof DraftCVSchema>;
