@@ -9,8 +9,8 @@ export function mergeDraft(prior: DraftCV, next: DraftCV): DraftCV {
 	};
 }
 
-function mergeSkills(a?: string[], b?: string[]) {
-	if (!a && !b) return undefined;
+function mergeSkills(a: string[] | null, b: string[] | null) {
+	if (!a && !b) return null;
 	return Array.from(new Set<string>([...(a ?? []), ...(b ?? [])]));
 }
 
