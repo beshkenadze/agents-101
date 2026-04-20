@@ -40,6 +40,11 @@ yarn-error.log*
 # generated PDFs
 /public/cvs/
 
+# Mastra thread / working-memory store (created at runtime)
+mastra.db
+mastra.db-shm
+mastra.db-wal
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts
