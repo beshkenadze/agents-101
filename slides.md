@@ -296,10 +296,10 @@ status: "§ bridge"
 <h2 class="heading" style="font-size: 68px;">A tool call is<br/>structured output + execute.</h2>
 
 <pre class="ascii" style="font-size: 22px; line-height: 1.7; margin-top: 24px;">  <span style="color: var(--fg-dim);">model reply (structured):</span>
-    { "tool": "getWorkExperience", "params": { "userId": "42" } }
+    { "tool": "extractMetadata", "args": { "text": "I'm Aleksandr..." } }
                             <em>│</em>
                             <em>▼</em>
-  <span style="color: var(--fg-dim);">runtime executes:</span>  getWorkExperience({ userId: "42" })
+  <span style="color: var(--fg-dim);">runtime executes:</span>  extractMetadata({ text: "I'm Aleksandr..." })
                             <em>│</em>
                             <em>▼</em>
   <span style="color: var(--fg-dim);">result →</span>  next model call</pre>
@@ -330,14 +330,21 @@ layout: split
 
 ::left::
 
-<div class="code-bar"><span class="dots-mini"><i></i><i></i><i></i></span>tools/get-work-experience.ts</div>
+<div class="code-bar"><span class="dots-mini"><i></i><i></i><i></i></span>tools/extract-metadata.ts</div>
 
 ```ts
-export const getWorkExperience = tool({
-  description: "Get the user's work experience",
-  parameters:  z.object({ userId: z.string() }),
-  execute: async ({ userId }) => {
-    return await db.jobs.findMany({ userId })
+export const extractMetadata = createTool({
+  id:           "extract-metadata",
+  description:  "Extract a draft CV from free-form user text.",
+  inputSchema:  z.object({ text: z.string() }),
+  outputSchema: DraftCVSchema,
+  execute: async ({ context }) => {
+    const { object } = await generateObject({
+      model:  openai("gpt-5-nano"), // cheap — structured extraction
+      schema: DraftCVSchema,
+      prompt: `Extract from: ${context.text}`,
+    })
+    return object
   },
 })
 ```
@@ -347,7 +354,7 @@ export const getWorkExperience = tool({
 <ol class="tool-steps">
 <li v-click="1"><span class="idx">01</span><span class="t">Model reads the <strong>description</strong>.</span></li>
 <li v-click="2"><span class="idx">02</span><span class="t">Decides it fits the task.</span></li>
-<li v-click="3"><span class="idx">03</span><span class="t">Fills <strong>parameters</strong> from the Zod schema.</span></li>
+<li v-click="3"><span class="idx">03</span><span class="t">Fills <strong>inputSchema</strong> (Zod) with args.</span></li>
 <li v-click="4"><span class="idx">04</span><span class="t"><code style="color: var(--accent);">execute()</code> runs. Result goes back.</span></li>
 </ol>
 
@@ -508,9 +515,9 @@ status: "§ two backends"
 
 <h2 class="heading" style="font-size: 64px;">One chat,<br/>two backends.</h2>
 
-<pre class="ascii" style="font-size: 22px; line-height: 1.8; margin-top: 24px;">                         <span style="color: var(--accent);">A · workflow</span>  <em>→</em>  step · step · step      <em>─┐</em>
-  free-form chat  <em>──┤</em>                                              <em>├──▶</em>  { name, skills, jobs }
-                         <span style="color: var(--accent);">B · agent</span>     <em>→</em>  tools + loop            <em>─┘</em></pre>
+<pre class="ascii" style="font-size: 22px; line-height: 1.8; margin-top: 24px;">                         <span style="color: var(--accent);">A · workflow</span>  <em>→</em>  step · step · branch    <em>─┐</em>
+  free-form chat  <em>──┤</em>                                              <em>├──▶</em>  { name, headline, skills, jobs }
+                         <span style="color: var(--accent);">B · agent</span>     <em>→</em>  tools + loop + memory   <em>─┘</em></pre>
 
 <div class="tag-row" style="margin-top: 32px;">
 <span class="tag" v-click="1"><span class="dot-s"></span>UI doesn't know which backend ran</span>
@@ -552,7 +559,7 @@ status: "§ input"
 <span class="line" style="padding-left: 84px;">At Denovo: consulting for LegalTech and EdTech startups.</span>
 <span class="line" style="padding-left: 84px;">Stack: TypeScript, Node, Tauri, Electron, on-device ML, LoRA fine-tuning.</span>
 <span class="line" style="margin-top: 18px;" v-click><span class="muted">── goal ──────────────────────────────</span></span>
-<span class="line" v-click><span class="muted">output:</span> a structured CV <span style="color: var(--accent)">&#123; name, skills[], jobs[] &#125;</span></span>
+<span class="line" v-click><span class="muted">output:</span> a structured CV <span style="color: var(--accent)">&#123; name, headline, skills[], jobs[] &#125;</span></span>
 </div>
 </div>
 
@@ -573,39 +580,42 @@ meta: "§ 04 · workflow path"
 status: "backend · workflow"
 ---
 
-<div class="kicker">backend a · hardcoded steps</div>
+<div class="kicker">backend a · steps you wire yourself</div>
 
-<h2 class="heading" style="font-size: 72px;">Workflow: three<br/>generateObject calls.</h2>
+<h2 class="heading" style="font-size: 64px;">Workflow: extract →<br/>merge → validate → branch.</h2>
 
-<div class="code-bar"><span class="dots-mini"><i></i><i></i><i></i></span>workflow.ts</div>
+<div class="code-bar"><span class="dots-mini"><i></i><i></i><i></i></span>workflows/cv-workflow.ts</div>
 
 ```ts
-// step 01 — skills
-const skills = await generateObject({ schema: SkillsSchema, prompt })
-
-// step 02 — experience
-const jobs   = await generateObject({ schema: JobsSchema,   prompt })
-
-// step 03 — assemble
-const cv     = await generateObject({ schema: CVSchema,     prompt: "..." })
-
-return cv  // → { name, skills, jobs }
+export const cvWorkflow = createWorkflow({ id: "cv-workflow", inputSchema })
+  .then(extract)    // 1 × generateObject → DraftCVSchema · gpt-5-nano
+  .then(merge)      // plain code — keep fields already filled
+  .then(validate)   // CVSchema.safeParse → { valid, issue }
+  .branch([
+    [async ({ inputData }) => !inputData.valid, askStep],   // → question
+    [async ({ inputData }) =>  inputData.valid, readyStep], // → confirm PDF
+  ])
+  .commit()
 ```
 
 <div class="tag-row">
-<span class="tag" v-click="1"><span class="dot-s"></span>sequence visible in code</span>
-<span class="tag" v-click="2"><span class="dot-s"></span>cheap</span>
-<span class="tag" v-click="3"><span class="dot-s"></span>easy to diff</span>
+<span class="tag" v-click="1"><span class="dot-s"></span>one LLM call per turn</span>
+<span class="tag" v-click="2"><span class="dot-s"></span>cheap — nano for extraction</span>
+<span class="tag" v-click="3"><span class="dot-s"></span>branch is code, not the model</span>
 </div>
 
 <!--
-First, the workflow version. It does everything step by step. Step 1 — get the skills. Step 2 — build the job list. Step 3 — put the final object together. Each step is one generateObject call. The sequence is clear, the code is simple.
+Backend A — workflow. Four named steps, wired by us with Mastra's createWorkflow.
 
-[click] The sequence is visible in the code.
+Extract is the only LLM call — generateObject on a cheap nano model, returns a partial draft. Merge is pure code: new fields fill empty slots, filled fields are never wiped. Validate runs the strict CVSchema through safeParse. Then branch — that's a code-level switch, not the model deciding — either we ask the user for the missing field, or we confirm and render the PDF.
 
-[click] It is cheap.
+[click] One LLM call per turn — all orchestration is code.
 
-[click] And it is easy to diff between runs.
+[click] We use gpt-5-nano for extraction. Mechanical structured output is where cheap models shine.
+
+[click] The branch is deterministic — we own every fork.
+
+This is interactive by the way: state lives across turns, so a missing field is asked, not hallucinated.
 -->
 
 ---
@@ -615,39 +625,99 @@ meta: "§ 04 · agent path"
 status: "backend · agent"
 ---
 
-<div class="kicker">backend b · system prompt + tools</div>
+<div class="kicker">backend b · goal + tools, no script</div>
 
-<h2 class="heading" style="font-size: 72px;">Agent: a prompt<br/>and two tools.</h2>
+<h2 class="heading" style="font-size: 64px;">Agent: instructions,<br/>tools, working memory.</h2>
 
-<div class="code-bar"><span class="dots-mini"><i></i><i></i><i></i></span>agent.ts</div>
+<div class="code-bar"><span class="dots-mini"><i></i><i></i><i></i></span>agents/cv-agent.ts</div>
 
 ```ts
-const cvAgent = agent({
-  model: openai("gpt-5"),
-  system: "You build structured CVs from free-form chat.",
-  tools: { extractSkills, formatExperience },
+export const cvAgent = new Agent({
+  id:    "cv-agent",
+  model: "openai/gpt-5-mini",
+  instructions: `
+    You are a CV-building agent. Extract → validate → confirm → generate.
+    Never invent facts. Never call generatePdf without explicit approval.`,
+  tools:  { extractMetadata, validateCV, askConfirmation, generatePdf, webSearch },
+  memory, // per-thread draft, schema = DraftCVSchema
 })
-
-const cv = await cvAgent.run(userMessage)
-// agent picks which tool, in what order. same output.
 ```
 
 <div class="tag-row">
-<span class="tag" style="border-color: var(--accent-dim); color: var(--accent);" v-click="1"><span class="dot-s"></span>chooses its own path</span>
-<span class="tag" v-click="2"><span class="dot-s"></span>same output shape</span>
-<span class="tag" style="border-color: var(--warn-dim); color: var(--warn);" v-click="3"><span class="dot-s" style="background: var(--warn)"></span>more tokens</span>
+<span class="tag" style="border-color: var(--accent-dim); color: var(--accent);" v-click="1"><span class="dot-s"></span>picks its own path</span>
+<span class="tag" v-click="2"><span class="dot-s"></span>same CV shape</span>
+<span class="tag" v-click="3"><span class="dot-s"></span>webSearch is optional — agent decides</span>
+<span class="tag" style="border-color: var(--warn-dim); color: var(--warn);" v-click="4"><span class="dot-s" style="background: var(--warn)"></span>more tokens, less predictable</span>
 </div>
 
 <!--
-Now the same request — but through an agent. The agent gets two tools: extractSkills and formatExperience. It decides which one to call, and in what order. The result is the same, but the agent picked the path.
+Backend B — agent. Same task, same CV shape. But instead of wiring steps, we give the model instructions, five tools, and per-thread memory.
 
-[click] It picks its own path.
+The tools cover the same ground as the workflow plus a couple of extras: extractMetadata is the same one-shot extractor, validateCV runs Zod, askConfirmation asks the user about a field, generatePdf renders the file — and webSearch is only called if the model decides it needs it. For example, "Denovo LLC" — it may google to verify the company.
 
-[click] The output shape is the same.
+[click] The agent chooses the order. No branch in our code.
 
-[click] But we pay more tokens.
+[click] The output shape is the same — we validate against CVSchema either way.
 
-Both work. Workflow wins when the steps are fixed. Agent wins when we add something like "google the company if you don't know it" — that path you can't draw up front.
+[click] webSearch is opt-in — only fires when the model thinks it's worth the tokens. That's the agent judgement call.
+
+[click] And we pay for it: more tokens, higher variance between runs.
+
+Both backends reach the same PDF. Workflow is cheaper and predictable. Agent is flexible.
+-->
+
+---
+title: Working memory
+path: "/demo/working-memory"
+meta: "§ 04 · state across turns"
+status: "§ memory"
+layout: split
+---
+
+<div class="kicker">what makes the agent feel like a person</div>
+
+<h2 class="heading" style="font-size: 64px;">Schema-backed<br/>memory.</h2>
+
+::left::
+
+<div class="code-bar"><span class="dots-mini"><i></i><i></i><i></i></span>lib/memory.ts</div>
+
+```ts
+export const memory = new Memory({
+  storage,              // libsql
+  options: {
+    workingMemory: {
+      enabled: true,
+      schema: DraftCVSchema, // same Zod schema
+    },
+  },
+})
+```
+
+::right::
+
+<p class="lead" style="font-size: 26px; max-width: 36ch;">Mastra injects the current draft into every turn. Agent writes it back via <code>updateWorkingMemory</code>.</p>
+
+<ul class="checks" style="margin-top: 20px;" v-click>
+<li>Turn 1 fills <code>name</code>, <code>skills</code></li>
+<li>Turn 2 fills <code>jobs</code> — turn 1 is remembered</li>
+<li>Turn 3 confirms — agent reads memory, calls <code>generatePdf</code></li>
+</ul>
+
+<p class="body" style="margin-top: 24px;" v-click>Same <code>DraftCVSchema</code> the workflow uses. <span style="color: var(--accent)">One Zod schema, three call-sites.</span></p>
+
+<!--
+One more thing worth showing — working memory.
+
+The agent isn't just a loop, it has persistent state across turns. Mastra gives you this out of the box: you set a Zod schema — same DraftCVSchema we use everywhere — and Mastra injects the current draft into the prompt every turn. The agent calls updateWorkingMemory to write changes back.
+
+[click] Turn 1 the user says "I'm Aleksandr, TypeScript and ML" — name and skills land in memory.
+
+[click] Turn 2 "at Denovo as consultant since 2024" — jobs gets added, name and skills are still there, agent doesn't re-extract them.
+
+[click] Turn 3 "yes generate" — agent reads memory, validates, calls generatePdf.
+
+[click] Notice: same Zod schema is used by the workflow's extract step, by the validate tool, and as the memory schema. One source of truth. That's what makes the whole thing hold together.
 -->
 
 ---
@@ -662,10 +732,11 @@ status: "end of deck"
 <h2 class="heading" style="font-size: 84px;">One call → a full agent.</h2>
 
 <div class="recap-grid">
-<div class="trade" style="font-size: 24px;">
+<div class="trade" style="font-size: 22px;">
 <span class="k">completion</span><span class="v">for predictable steps</span>
 <span class="k">structured</span><span class="v">data over text</span>
 <span class="k">tools</span><span class="v">let the agent act</span>
+<span class="k">memory</span><span class="v">one Zod schema, many call-sites</span>
 <span class="k">agent</span><span class="v">when the path is unknown · mind the risks</span>
 </div>
 <div style="display: flex; flex-direction: column; align-items: flex-start; justify-content: center; gap: 20px;">
