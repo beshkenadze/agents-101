@@ -761,7 +761,7 @@ export const memory = new Memory({
 <li v-click="3">Turn 3 confirms — agent reads memory, calls <code>generatePdf</code></li>
 </ul>
 
-<p class="body" style="margin-top: 24px;" v-click="4">Same <code>DraftCVSchema</code> the workflow uses. <span style="color: var(--accent)">One Zod schema, three call-sites.</span></p>
+<p class="body" style="margin-top: 24px;" v-click="4">Same <code>DraftCVSchema</code> the workflow uses. <span style="color: var(--accent)">One Zod schema, three call-sites — and one more on the next slide.</span></p>
 
 <!--
 One more thing. It ties the whole demo together — working memory.
@@ -777,6 +777,76 @@ What this gives you, concretely:
 [click] Turn 3. User says "yes, generate". Agent reads memory. Validates the full CV. Calls generatePdf. Done.
 
 [click] The point that matters most. The same Zod schema is used in three places. Workflow's extract step. Agent's validateCV tool. Mastra's memory config. One source of truth, three call sites. That discipline is what keeps the two backends from drifting apart. Without a shared schema, the workflow would accept CVs the agent rejects. With it, the contract is enforced by the type system.
+-->
+
+---
+title: Render React in chat
+path: "/demo/render-react"
+meta: "§ 04 · UI"
+status: "§ agent picks UI"
+layout: split
+---
+
+<div class="kicker">one minute on the UI — this is React Helsinki</div>
+
+<h2 class="heading" style="font-size: 60px;">Agent speaks JSON.<br/>React renders.</h2>
+
+::left::
+
+<div class="code-bar"><span class="dots-mini"><i></i><i></i><i></i></span>tools/ask-confirmation.ts</div>
+
+```ts
+outputSchema: z.object({
+  field: z.string(),
+  proposedValue: z.string(),
+  ui: z.object({
+    type: z.literal("ConfirmCard"),
+    props: ConfirmSchema,   // same Zod
+  }),
+}),
+```
+
+<div class="code-bar" style="margin-top: 16px;"><span class="dots-mini"><i></i><i></i><i></i></span>app/page.tsx</div>
+
+```tsx
+<Renderer
+  spec={{ root: "r", elements: {
+    r: { type: spec.type, props: spec.props },
+  }}}
+  registry={registry}
+/>
+```
+
+::right::
+
+<p class="lead" style="font-size: 26px; max-width: 36ch;">Each tool output carries a <code>ui</code> spec. Agent picks the tool — agent picks the component.</p>
+
+<ul class="checks" style="margin-top: 20px;">
+<li v-click="1"><code>validateCV</code> valid → <code>CVCard</code></li>
+<li v-click="2"><code>askConfirmation</code> → <code>ConfirmCard</code></li>
+<li v-click="3">Unknown type → nothing renders. Fail-safe.</li>
+</ul>
+
+<p class="body" style="margin-top: 24px;" v-click="4"><span style="color: var(--accent)">One Zod schema, four call-sites.</span> extract · memory · validate · render.</p>
+
+<!--
+Since this is React Helsinki — one minute on the UI side.
+
+The CV card and the Yes/No card you saw in the demo — both rendered via json-render. No innerHTML. No raw HTML from the model.
+
+The flow is simple. Each tool has two jobs now. Do the work, and return a ui spec that says which component to render. askConfirmation returns ui.type "ConfirmCard". validateCV on success returns ui.type "CVCard". Same pattern in every tool that wants to draw something.
+
+On the frontend, we walk through the tool outputs. For any output with a ui field, we pass it to Renderer. The catalog maps type names to React components. Registry provides the actual components. No switch logic on the frontend.
+
+[click] validateCV returns a CVCard spec when the draft passes CVSchema. The CV preview appears as soon as validation succeeds.
+
+[click] askConfirmation returns a ConfirmCard spec. Yes/No buttons, typed props, same Renderer.
+
+[click] If the model returns a type that is not in the catalog — nothing renders. No error. No crash. Safe by design.
+
+[click] So the agent picks the component by picking the tool. That is generative UI with a safety rail. And our Zod schema now has four call-sites — extract, memory, validate, render. One source of truth from the LLM output all the way down to React props.
+
+Honest note: we have two components registered for this talk. Register more and the agent can pick from a bigger palette. The mechanism is ready.
 -->
 
 ---
@@ -821,7 +891,7 @@ Structured output — so you get typed data, not a paragraph to parse. Plug in a
 
 Tools — structured output that your code runs. This is how the agent acts, not just talks.
 
-Memory — state across turns, backed by a Zod schema. The same schema that validates output also shapes what the agent remembers. One schema, three call sites. That is the spine.
+Memory — state across turns, backed by a Zod schema. The same schema that validates output also shapes what the agent remembers, and what React renders. One schema, four call sites. That is the spine.
 
 Agent — completion plus tools plus a loop. Use it when the path is not known up front. Remember the costs: more tokens, higher variance, the chance of drift. Start with a workflow. Reach for an agent when the workflow cannot express the task.
 
