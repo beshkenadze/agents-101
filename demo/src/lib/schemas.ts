@@ -4,16 +4,20 @@ import { z } from "zod";
 // Strict (required vs optional stated explicitly). Used for the final
 // artifact: generatePdf input, CVCard props, validateCV pass condition.
 
+// Note: OpenAI strict JSON-schema mode requires every property to be listed
+// in `required`. We model "optional" as nullable instead — every field is
+// always present but may be `null`.
+
 export const JobSchema = z.object({
 	company: z.string().min(1),
 	role: z.string().min(1),
-	years: z.string().optional().describe("Free-form span, e.g. '2020–2023'"),
-	highlights: z.array(z.string()).max(4).optional(),
+	years: z.string().nullable().describe("Free-form span, e.g. '2020–2023' or null if unknown"),
+	highlights: z.array(z.string()).nullable(),
 });
 
 export const CVSchema = z.object({
 	name: z.string().min(1),
-	headline: z.string().optional().describe("One-line professional summary"),
+	headline: z.string().nullable().describe("One-line professional summary or null"),
 	skills: z.array(z.string()).min(1),
 	jobs: z.array(JobSchema).min(1),
 });

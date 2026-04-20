@@ -46,7 +46,7 @@ body {
 	font-family: var(--font-mono);
 	font-size: 15px;
 	display: flex;
-	align-items: center;
+	align-items: stretch;
 	justify-content: center;
 	padding: 24px;
 	min-height: 100vh;
@@ -70,6 +70,10 @@ body::before {
 	max-width: 900px;
 	position: relative;
 	z-index: 1;
+	display: flex;
+	flex-direction: column;
+	min-height: 0;
+	flex: 1;
 }
 
 /* Brand header */
@@ -131,7 +135,8 @@ body::before {
 	box-shadow: 0 24px 64px rgba(0, 0, 0, 0.45);
 	display: flex;
 	flex-direction: column;
-	height: 640px;
+	flex: 1;
+	min-height: 420px;
 }
 .tbar {
 	display: flex;

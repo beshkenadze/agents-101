@@ -657,6 +657,18 @@ function MessageView({
 		if (p.type === "tool-askConfirmation") {
 			askTools.push(p as ApprovalTool);
 		}
+		// Workflow backend emits plain data-confirm parts that carry the same
+		// shape in `data` — merge them with tool-askConfirmation for rendering.
+		if (p.type === "data-confirm") {
+			const d = (p as { data?: unknown }).data as {
+				field?: string;
+				question?: string;
+				proposedValue?: string;
+			} | undefined;
+			if (d) {
+				askTools.push({ toolCallId: `data-confirm-${p.id ?? ""}`, input: d });
+			}
+		}
 	}
 	// Dedupe askConfirmation calls by toolCallId (stream sends multiple events).
 	const askById = new Map<string, ApprovalTool>();
