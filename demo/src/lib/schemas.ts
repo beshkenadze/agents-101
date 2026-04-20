@@ -11,13 +11,19 @@ import { z } from "zod";
 export const JobSchema = z.object({
 	company: z.string().min(1),
 	role: z.string().min(1),
-	years: z.string().nullable().describe("Free-form span, e.g. '2020–2023' or null if unknown"),
+	years: z
+		.string()
+		.nullable()
+		.describe("Free-form span, e.g. '2020–2023' or null if unknown"),
 	highlights: z.array(z.string()).nullable(),
 });
 
 export const CVSchema = z.object({
 	name: z.string().min(1),
-	headline: z.string().nullable().describe("One-line professional summary or null"),
+	headline: z
+		.string()
+		.nullable()
+		.describe("One-line professional summary or null"),
 	skills: z.array(z.string()).min(1),
 	jobs: z.array(JobSchema).min(1),
 });
@@ -43,6 +49,28 @@ export const DraftCVSchema = z.object({
 });
 
 export type DraftCV = z.infer<typeof DraftCVSchema>;
+
+// ─── Confirm card ───────────────────────────────────────────
+// Props for the ConfirmCard component (Yes/No question).
+
+export const ConfirmSchema = z.object({
+	field: z.string().describe("Short label of what is being confirmed"),
+	question: z.string().describe("Short direct question for the user"),
+	proposedValue: z.string().describe("Suggested answer"),
+});
+
+export type Confirm = z.infer<typeof ConfirmSchema>;
+
+// ─── UI spec — what the agent emits to render ───────────────
+// Discriminated union: the agent picks the `type`, the UI renders
+// through json-render. Unknown types render nothing. Safe by default.
+
+export const UISpecSchema = z.discriminatedUnion("type", [
+	z.object({ type: z.literal("CVCard"), props: CVSchema }),
+	z.object({ type: z.literal("ConfirmCard"), props: ConfirmSchema }),
+]);
+
+export type UISpec = z.infer<typeof UISpecSchema>;
 
 // ─── Workflow-backend helpers ───────────────────────────────
 // The workflow path uses three discrete generateObject calls, each with its

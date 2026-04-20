@@ -4,15 +4,15 @@ import {
 	createUIMessageStreamResponse,
 	type UIMessage,
 } from "ai";
-import { renderCVtoPdf } from "@/lib/pdf";
 import {
 	clearWorkflowState,
 	getWorkflowState,
 	setWorkflowState,
 } from "@/lib/backends/workflow-state";
-import { cvWorkflow } from "@/lib/workflows/cv-workflow";
 import { mastra } from "@/lib/mastra";
-import { CVSchema } from "@/lib/schemas";
+import { renderCVtoPdf } from "@/lib/pdf";
+import { CVSchema, type UISpec } from "@/lib/schemas";
+import { cvWorkflow } from "@/lib/workflows/cv-workflow";
 
 export const maxDuration = 120;
 
@@ -93,10 +93,17 @@ export async function POST(req: Request) {
 				const priorValid = CVSchema.safeParse(state.draft).success;
 				const isApproval = APPROVAL_RE.test(userText);
 
+				const emitUI = (spec: UISpec) =>
+					writer.write({
+						type: "data-ui",
+						id: `ui-${spec.type}-${crypto.randomUUID().slice(0, 6)}`,
+						data: spec,
+					});
+
 				// Fast-path: user confirmed PDF and we already have a valid CV.
 				if (priorValid && isApproval) {
 					const cv = CVSchema.parse(state.draft);
-					writer.write({ type: "data-cv", id: "cv", data: cv });
+					emitUI({ type: "CVCard", props: cv });
 
 					writer.write({
 						type: "data-workflow-step",
@@ -185,11 +192,17 @@ export async function POST(req: Request) {
 						}
 						// Capture intermediate draft after merge for early preview.
 						if (stepId === "merge") {
-							const merged = (payload?.result as { merged?: typeof state.draft })
-								?.merged;
+							const merged = (
+								payload?.result as { merged?: typeof state.draft }
+							)?.merged;
 							if (merged) {
 								finalDraft = merged;
-								writer.write({ type: "data-cv", id: "cv", data: merged });
+								// Render preview only when the draft validates — emitUI
+								// uses the same CVSchema the agent side uses.
+								const parsed = CVSchema.safeParse(merged);
+								if (parsed.success) {
+									emitUI({ type: "CVCard", props: parsed.data });
+								}
 							}
 						}
 						// Either ask-field or ready is the final branch step.
@@ -213,10 +226,9 @@ export async function POST(req: Request) {
 				if (finalResult) {
 					finalDraft = finalResult.merged;
 					if (finalResult.valid) {
-						writer.write({
-							type: "data-confirm",
-							id: "confirm",
-							data: {
+						emitUI({
+							type: "ConfirmCard",
+							props: {
 								field: "generate PDF",
 								question: "Generate the PDF from this CV?",
 								proposedValue: "Yes, generate",

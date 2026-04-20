@@ -10,16 +10,9 @@ import {
 	useRef,
 	useState,
 } from "react";
-import {
-	Confirmation,
-	ConfirmationAccepted,
-	ConfirmationAction,
-	ConfirmationActions,
-	ConfirmationRejected,
-	ConfirmationRequest,
-} from "@/components/ai-elements/confirmation";
-import { type CV, CVSchema } from "@/lib/schemas";
+import { type UISpec, UISpecSchema } from "@/lib/schemas";
 import { registry } from "@/lib/ui/registry";
+import { ReplyContext } from "@/lib/ui/reply-context";
 
 type Backend = "workflow" | "agent";
 
@@ -67,7 +60,7 @@ export default function ChatPage() {
 	);
 	const resourceId = "demo-user";
 
-	const { messages, sendMessage, status, addToolApprovalResponse } = useChat({
+	const { messages, sendMessage, status } = useChat({
 		transport: new DefaultChatTransport({
 			api: "/api/chat",
 			prepareSendMessagesRequest: ({ messages: msgs }) => ({
@@ -147,126 +140,133 @@ export default function ChatPage() {
 	const showSuggestions = messages.length === 0;
 
 	return (
-		<JSONUIProvider registry={registry}>
-		<div className="app">
-			<div className="brand">
-				<div className="name">
-					agents-101<span className="caret">▊</span>
-				</div>
-				<div className="meta">
-					<span className="status-dot" />
-					session · live demo
-				</div>
-			</div>
-
-			<div className="window">
-				<div className="tbar">
-					<span className="dots-mini">
-						<i />
-						<i />
-						<i />
-					</span>
-					<span className="path">
-						<span className="tilde">~</span>/demo/cv-generator — chat
-					</span>
-					<span className="spacer" />
-					<button
-						type="button"
-						className="mode-badge"
-						data-mode={backend}
-						title="click to toggle backend"
-						onClick={() =>
-							setBackend((b) => (b === "agent" ? "workflow" : "agent"))
-						}
-					>
-						<span className="pill" />
-						<span>mode: {backend}</span>
-					</button>
-				</div>
-
-				<div className="chat" ref={chatRef}>
-					<SystemLine role="// init">
-						session started · model: gpt-5-mini · tools: extractSkills,
-						formatExperience, generatePdf, webSearch
-					</SystemLine>
-					<AssistantLine>
-						Hey. Tell me about your work — skills, jobs, years — in plain words.
-						I'll turn it into a structured CV and export it to PDF.
-					</AssistantLine>
-
-					{messages.map((m, mi) => (
-						<MessageView
-							key={m.id}
-							message={m}
-							isLast={mi === messages.length - 1}
-							busy={busy}
-							backend={backend}
-							onApproval={addToolApprovalResponse}
-							onReply={(text) => sendMessage({ text })}
-						/>
-					))}
-
-					{busy && messages.at(-1)?.role !== "assistant" && (
-						<div className="msg assistant">
-							<span className="role">agent</span>
-							<span className="content">
-								<span className="thinking">
-									<span className="d" />
-									<span className="d" />
-									<span className="d" />
-								</span>
-							</span>
+		<ReplyContext.Provider
+			value={{ onReply: (text) => sendMessage({ text }), disabled: busy }}
+		>
+			<JSONUIProvider registry={registry}>
+				<div className="app">
+					<div className="brand">
+						<div className="name">
+							agents-101<span className="caret">▊</span>
 						</div>
-					)}
-				</div>
-
-				{showSuggestions && (
-					<div className="suggestions">
-						{SUGGESTIONS.map((s) => (
-							<button
-								key={s}
-								type="button"
-								className="chip"
-								onClick={() => handleSuggestion(s)}
-							>
-								{s}
-							</button>
-						))}
+						<div className="meta">
+							<span className="status-dot" />
+							session · live demo
+						</div>
 					</div>
-				)}
 
-				<form className="inputbar" onSubmit={handleSubmit}>
-					<span className="prompt">❯</span>
-					<textarea
-						ref={inputRef}
-						rows={1}
-						placeholder="type a message, enter to send · shift+enter for newline"
-						autoComplete="off"
-						spellCheck={false}
-						value={input}
-						onChange={(e) => {
-							setInput(e.target.value);
-							autoGrow();
-						}}
-						onKeyDown={handleKeyDown}
-						disabled={busy}
-					/>
-					<button className="send" type="submit" disabled={busy || !input.trim()}>
-						<span>run</span>
-						<span className="kbd">↵</span>
-					</button>
-				</form>
-			</div>
+					<div className="window">
+						<div className="tbar">
+							<span className="dots-mini">
+								<i />
+								<i />
+								<i />
+							</span>
+							<span className="path">
+								<span className="tilde">~</span>/demo/cv-generator — chat
+							</span>
+							<span className="spacer" />
+							<button
+								type="button"
+								className="mode-badge"
+								data-mode={backend}
+								title="click to toggle backend"
+								onClick={() =>
+									setBackend((b) => (b === "agent" ? "workflow" : "agent"))
+								}
+							>
+								<span className="pill" />
+								<span>mode: {backend}</span>
+							</button>
+						</div>
 
-			<div className="hints">
-				<span>
-					<span className="kbd">↵</span> send · <span className="kbd">⇧↵</span>{" "}
-					newline · <span className="kbd">⌘K</span> clear
-				</span>
-				<span>agents 101 · demo</span>
-			</div>
-		</div>
-		</JSONUIProvider>
+						<div className="chat" ref={chatRef}>
+							<SystemLine role="// init">
+								session started · model: gpt-5-mini · tools: extractSkills,
+								formatExperience, generatePdf, webSearch
+							</SystemLine>
+							<AssistantLine>
+								Hey. Tell me about your work — skills, jobs, years — in plain
+								words. I'll turn it into a structured CV and export it to PDF.
+							</AssistantLine>
+
+							{messages.map((m, mi) => (
+								<MessageView
+									key={m.id}
+									message={m}
+									isLast={mi === messages.length - 1}
+									busy={busy}
+									backend={backend}
+								/>
+							))}
+
+							{busy && messages.at(-1)?.role !== "assistant" && (
+								<div className="msg assistant">
+									<span className="role">agent</span>
+									<span className="content">
+										<span className="thinking">
+											<span className="d" />
+											<span className="d" />
+											<span className="d" />
+										</span>
+									</span>
+								</div>
+							)}
+						</div>
+
+						{showSuggestions && (
+							<div className="suggestions">
+								{SUGGESTIONS.map((s) => (
+									<button
+										key={s}
+										type="button"
+										className="chip"
+										onClick={() => handleSuggestion(s)}
+									>
+										{s}
+									</button>
+								))}
+							</div>
+						)}
+
+						<form className="inputbar" onSubmit={handleSubmit}>
+							<span className="prompt">❯</span>
+							<textarea
+								ref={inputRef}
+								rows={1}
+								placeholder="type a message, enter to send · shift+enter for newline"
+								autoComplete="off"
+								spellCheck={false}
+								value={input}
+								onChange={(e) => {
+									setInput(e.target.value);
+									autoGrow();
+								}}
+								onKeyDown={handleKeyDown}
+								disabled={busy}
+							/>
+							<button
+								className="send"
+								type="submit"
+								disabled={busy || !input.trim()}
+							>
+								<span>run</span>
+								<span className="kbd">↵</span>
+							</button>
+						</form>
+					</div>
+
+					<div className="hints">
+						<span>
+							<span className="kbd">↵</span> send ·{" "}
+							<span className="kbd">⇧↵</span> newline ·{" "}
+							<span className="kbd">⌘K</span> clear
+						</span>
+						<span>agents 101 · demo</span>
+					</div>
+				</div>
+			</JSONUIProvider>
+		</ReplyContext.Provider>
 	);
 }
 
@@ -341,10 +341,8 @@ function ToolBlock({
 				{entries.length > 0 || result ? (
 					<div className="args">
 						{entries.map(([k, v]) => {
-							const raw =
-								typeof v === "string" ? v : JSON.stringify(v);
-							const preview =
-								raw.length > 160 ? `${raw.slice(0, 160)}…` : raw;
+							const raw = typeof v === "string" ? v : JSON.stringify(v);
+							const preview = raw.length > 160 ? `${raw.slice(0, 160)}…` : raw;
 							return (
 								<div key={k}>
 									<span className="k">{k}:</span>{" "}
@@ -362,174 +360,6 @@ function ToolBlock({
 	);
 }
 
-function ConfirmationPrompt({
-	state,
-	approval,
-	onApproval,
-	question,
-	proposedValue,
-	field,
-}: {
-	state?: string;
-	approval: { id: string };
-	onApproval: ApprovalResponseFn;
-	question: string;
-	proposedValue?: string;
-	field?: string;
-}) {
-	return (
-		<Confirmation
-			approval={approval as never}
-			state={state as never}
-			className="bg-transparent text-[color:var(--fg)] border-[color:var(--line)]"
-		>
-			<ConfirmationRequest>
-				{field ? (
-					<>
-						<div style={{ fontSize: 10, letterSpacing: "0.2em", textTransform: "uppercase", color: "var(--fg-faint)", marginBottom: 6 }}>
-							{field}
-						</div>
-					</>
-				) : null}
-				<div>{question}</div>
-				{proposedValue ? (
-					<div
-						style={{
-							marginTop: 8,
-							padding: "6px 10px",
-							border: "1px solid var(--line)",
-							borderRadius: 4,
-							background: "var(--bg-3)",
-							fontFamily: "var(--font-mono)",
-							color: "var(--accent)",
-							fontSize: 13,
-						}}
-					>
-						{proposedValue}
-					</div>
-				) : null}
-			</ConfirmationRequest>
-			<ConfirmationAccepted>approved</ConfirmationAccepted>
-			<ConfirmationRejected>rejected</ConfirmationRejected>
-			<ConfirmationActions>
-				<ConfirmationAction
-					variant="outline"
-					onClick={() => onApproval({ id: approval.id, approved: false })}
-				>
-					Reject
-				</ConfirmationAction>
-				<ConfirmationAction
-					variant="default"
-					onClick={() => onApproval({ id: approval.id, approved: true })}
-				>
-					Approve
-				</ConfirmationAction>
-			</ConfirmationActions>
-		</Confirmation>
-	);
-}
-
-function ConfirmCard({
-	field,
-	question,
-	proposedValue,
-	onReply,
-	disabled,
-}: {
-	field?: string;
-	question: string;
-	proposedValue?: string;
-	onReply: (text: string) => void;
-	disabled?: boolean;
-}) {
-	return (
-		<div
-			style={{
-				border: "1px solid var(--accent-dim)",
-				background: "var(--bg-3)",
-				borderRadius: 6,
-				padding: "14px 16px",
-				display: "flex",
-				flexDirection: "column",
-				gap: 12,
-				animation: "fadeIn 220ms ease both",
-			}}
-		>
-			{field ? (
-				<div
-					style={{
-						fontSize: 10,
-						letterSpacing: "0.2em",
-						textTransform: "uppercase",
-						color: "var(--fg-faint)",
-					}}
-				>
-					{field}
-				</div>
-			) : null}
-			<div style={{ color: "var(--fg)", fontSize: 13, lineHeight: 1.5 }}>
-				{question}
-			</div>
-			{proposedValue ? (
-				<div
-					style={{
-						padding: "6px 10px",
-						border: "1px solid var(--line)",
-						borderRadius: 4,
-						background: "var(--bg-2)",
-						fontFamily: "var(--font-mono)",
-						color: "var(--accent)",
-						fontSize: 13,
-					}}
-				>
-					{proposedValue}
-				</div>
-			) : null}
-			<div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
-				<button
-					type="button"
-					onClick={() => onReply("no, let me correct that")}
-					disabled={disabled}
-					style={{
-						padding: "6px 12px",
-						border: "1px solid var(--line)",
-						borderRadius: 4,
-						background: "transparent",
-						color: "var(--fg-dim)",
-						fontFamily: "var(--font-mono)",
-						fontSize: 11,
-						letterSpacing: "0.18em",
-						textTransform: "uppercase",
-						cursor: disabled ? "not-allowed" : "pointer",
-					}}
-				>
-					No
-				</button>
-				<button
-					type="button"
-					onClick={() => onReply("yes")}
-					disabled={disabled}
-					style={{
-						padding: "6px 14px",
-						border: "none",
-						borderRadius: 4,
-						background: "var(--accent)",
-						color: "var(--bg)",
-						fontFamily: "var(--font-mono)",
-						fontSize: 11,
-						fontWeight: 600,
-						letterSpacing: "0.18em",
-						textTransform: "uppercase",
-						cursor: disabled ? "not-allowed" : "pointer",
-					}}
-				>
-					Yes
-				</button>
-			</div>
-		</div>
-	);
-}
-
 function ArtifactLink({
 	url,
 	mediaType,
@@ -540,7 +370,13 @@ function ArtifactLink({
 	bytes?: number;
 }) {
 	return (
-		<a className="artifact" href={url} target="_blank" rel="noreferrer" download>
+		<a
+			className="artifact"
+			href={url}
+			target="_blank"
+			rel="noreferrer"
+			download
+		>
 			<span className="badge">PDF</span>
 			<span className="name">{filePartName(url)}</span>
 			{typeof bytes === "number" && (
@@ -564,25 +400,16 @@ type UiMessage = {
 	parts: Part[];
 };
 
-type ApprovalResponseFn = (response: {
-	id: string;
-	approved: boolean;
-}) => void | Promise<void>;
-
 function MessageView({
 	message,
 	isLast,
 	busy,
 	backend,
-	onApproval,
-	onReply,
 }: {
 	message: UiMessage;
 	isLast: boolean;
 	busy: boolean;
 	backend: Backend;
-	onApproval: ApprovalResponseFn;
-	onReply: (text: string) => void;
 }) {
 	if (message.role === "user") {
 		const text = message.parts
@@ -608,81 +435,80 @@ function MessageView({
 		mediaType: string;
 	}[];
 
-	const textParts = message.parts.filter((p) => p.type === "text") as unknown as {
+	const textParts = message.parts.filter(
+		(p) => p.type === "text",
+	) as unknown as {
 		type: "text";
 		text: string;
 	}[];
 
-	// Single source of truth: CVSchema.
-	// Workflow emits `data-cv`; agent produces the CV as `generatePdf` tool
-	// input (which pauses for approval — UI shows the preview + confirmation).
-	let cv: CV | null = null;
-	type ApprovalTool = {
+	// Unified UI pipeline.
+	// • Agent tools return `ui: { type, props }` in their output — the agent
+	//   picks the component by picking the tool.
+	// • Workflow emits `data-ui` events with the same shape.
+	// Everything flows through json-render's Renderer via the shared catalog.
+	type PdfTool = {
 		toolCallId?: string;
 		state?: string;
-		input?: unknown;
-		output?: unknown;
-		approval?: { id: string; status?: string };
+		output?: { url?: string; bytes?: number };
 	};
-	let pdfTool: ApprovalTool | null = null;
-	const askTools: ApprovalTool[] = [];
-	const tryParse = (data: unknown) => {
-		const result = CVSchema.safeParse(data);
-		return result.success ? result.data : null;
+	let pdfTool: PdfTool | null = null;
+	type UiEntry = { key: string; spec: UISpec };
+	const uiEntries: UiEntry[] = [];
+
+	const pushSpec = (key: string, raw: unknown) => {
+		const parsed = UISpecSchema.safeParse(raw);
+		if (parsed.success) uiEntries.push({ key, spec: parsed.data });
 	};
+
 	for (const p of message.parts) {
-		if (p.type === "data-cv") {
-			const parsed = tryParse((p as { data?: unknown }).data);
-			if (parsed) cv = parsed;
+		// Workflow: data-ui event carries a UISpec directly.
+		if (p.type === "data-ui") {
+			pushSpec(
+				`data-ui-${(p as { id?: string }).id ?? ""}`,
+				(p as { data?: unknown }).data,
+			);
+			continue;
 		}
-		// validateCV gets the full draft as input; once valid, that draft is
-		// the CV we render. This lets the preview appear BEFORE generatePdf.
-		if (p.type === "tool-validateCV") {
-			const vp = p as {
+		// Agent: any tool-* with output.ui contributes its spec.
+		if (typeof p.type === "string" && p.type.startsWith("tool-")) {
+			const tp = p as {
+				type: string;
+				toolCallId?: string;
 				state?: string;
-				input?: unknown;
-				output?: { valid?: boolean };
+				output?: unknown;
 			};
-			if (vp.state === "output-available" && vp.output?.valid === true) {
-				const parsed = tryParse(vp.input);
-				if (parsed) cv = parsed;
+			if (
+				tp.state === "output-available" &&
+				tp.output &&
+				typeof tp.output === "object" &&
+				"ui" in tp.output
+			) {
+				pushSpec(
+					tp.toolCallId ?? `${tp.type}-tool`,
+					(tp.output as { ui: unknown }).ui,
+				);
 			}
-		}
-		if (p.type === "tool-generatePdf") {
-			pdfTool = p as ApprovalTool;
-			// Input holds the final CV; useful if validateCV didn't land in this turn.
-			const parsed = tryParse((p as { input?: unknown }).input);
-			if (parsed) cv = parsed;
-		}
-		if (p.type === "tool-askConfirmation") {
-			askTools.push(p as ApprovalTool);
-		}
-		// Workflow backend emits plain data-confirm parts that carry the same
-		// shape in `data` — merge them with tool-askConfirmation for rendering.
-		if (p.type === "data-confirm") {
-			const d = (p as { data?: unknown }).data as {
-				field?: string;
-				question?: string;
-				proposedValue?: string;
-			} | undefined;
-			if (d) {
-				askTools.push({ toolCallId: `data-confirm-${p.id ?? ""}`, input: d });
-			}
+			if (p.type === "tool-generatePdf") pdfTool = tp as PdfTool;
 		}
 	}
-	// Dedupe askConfirmation calls by toolCallId (stream sends multiple events).
-	const askById = new Map<string, ApprovalTool>();
-	askTools.forEach((p, idx) => {
-		askById.set(p.toolCallId ?? `ask-${idx}`, p);
+
+	// Dedupe (streams may send the same event multiple times).
+	const seen = new Set<string>();
+	const uiSpecs = uiEntries.filter((u) => {
+		const k = `${u.spec.type}-${u.key}`;
+		if (seen.has(k)) return false;
+		seen.add(k);
+		return true;
 	});
-	const asks = Array.from(askById.values());
+
 	const pdfUrl =
 		pdfTool && pdfTool.state === "output-available" && pdfTool.output
-			? (pdfTool.output as { url?: string }).url
+			? pdfTool.output.url
 			: undefined;
 	const pdfBytes =
 		pdfTool && pdfTool.state === "output-available" && pdfTool.output
-			? (pdfTool.output as { bytes?: number }).bytes
+			? pdfTool.output.bytes
 			: undefined;
 
 	// Tool parts stream as multiple events per call (input-streaming, input-available,
@@ -746,8 +572,7 @@ function MessageView({
 			{toolParts.map((p, i) => {
 				const name = p.type.replace(/^tool-/, "");
 				const state = p.state ?? "input-streaming";
-				const done =
-					state === "output-available" || state === "output-error";
+				const done = state === "output-available" || state === "output-error";
 				const resultPreview =
 					typeof p.output === "string"
 						? p.output.slice(0, 120)
@@ -758,69 +583,45 @@ function MessageView({
 					<ToolBlock
 						key={p.toolCallId ?? `${message.id}-tool-${i}`}
 						title={`${name}()`}
-						args={
-							(p.input as Record<string, unknown>) ??
-							undefined
-						}
+						args={(p.input as Record<string, unknown>) ?? undefined}
 						done={done}
 						result={resultPreview}
 					/>
 				);
 			})}
 
-			{lastAssistantText && (
-				<AssistantLine>{lastAssistantText}</AssistantLine>
-			)}
+			{lastAssistantText && <AssistantLine>{lastAssistantText}</AssistantLine>}
 
-			{cv && (
-				<div className="msg assistant">
-					<span className="role">cv</span>
-					<span className="content" style={{ border: "none", padding: 0 }}>
-						<Renderer
-							spec={{
-								root: "cv-card",
-								elements: {
-									"cv-card": {
-										type: "CVCard",
-										props: cv as unknown as Record<string, unknown>,
-										children: [],
+			{uiSpecs.map((u) => {
+				// Hide stale Yes/No cards on older turns; CV previews stay.
+				if (u.spec.type === "ConfirmCard" && !isLast) return null;
+				const role =
+					u.spec.type === "CVCard"
+						? "cv"
+						: u.spec.type === "ConfirmCard"
+							? "ask"
+							: "ui";
+				return (
+					<div className="msg assistant" key={`ui-${u.spec.type}-${u.key}`}>
+						<span className="role">{role}</span>
+						<span className="content" style={{ border: "none", padding: 0 }}>
+							<Renderer
+								spec={{
+									root: "r",
+									elements: {
+										r: {
+											type: u.spec.type,
+											props: u.spec.props as unknown as Record<string, unknown>,
+											children: [],
+										},
 									},
-								},
-							}}
-							registry={registry}
-						/>
-					</span>
-				</div>
-			)}
-
-			{isLast &&
-				asks.map((ask, i) => {
-					const input = (ask.input ?? {}) as {
-						field?: string;
-						question?: string;
-						proposedValue?: string;
-					};
-					return (
-						<div
-							className="msg assistant"
-							key={ask.toolCallId ?? `ask-${i}`}
-						>
-							<span className="role">ask</span>
-							<span
-								className="content"
-								style={{ border: "none", padding: 0 }}
-							>
-								<ConfirmCard
-									field={input.field}
-									question={input.question ?? "Confirm?"}
-									proposedValue={input.proposedValue}
-									onReply={onReply}
-									disabled={busy}
-								/>
-							</span>
-						</div>
-					);
-				})}
+								}}
+								registry={registry}
+							/>
+						</span>
+					</div>
+				);
+			})}
 
 			{pdfUrl && (
 				<div className="msg assistant">

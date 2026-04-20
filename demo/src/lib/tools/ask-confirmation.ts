@@ -1,10 +1,11 @@
 import { createTool } from "@mastra/core/tools";
 import { z } from "zod";
+import { ConfirmSchema } from "@/lib/schemas";
 
 export const askConfirmation = createTool({
 	id: "ask-confirmation",
 	description:
-		"Surface a structured confirmation to the user. The UI renders { question, proposedValue } as a card with Yes / No buttons; the user's click arrives as their next chat message ('yes' or 'no, <change>'). The tool's output is informational — it echoes what you proposed. Use this for: (a) confirming a guessed field value before locking it in, (b) asking the user to approve final PDF generation.",
+		"Ask the user to confirm or reject a proposed value. The output carries a `ui` spec that renders a ConfirmCard with Yes/No buttons in chat. The user's click arrives as their next message ('yes' or 'no, <change>'). Use this for: (a) confirming a guessed field value before locking it in, (b) asking the user to approve final PDF generation.",
 	inputSchema: z.object({
 		field: z
 			.string()
@@ -17,18 +18,39 @@ export const askConfirmation = createTool({
 	outputSchema: z.object({
 		field: z.string(),
 		proposedValue: z.string(),
+		ui: z.object({
+			type: z.literal("ConfirmCard"),
+			props: ConfirmSchema,
+		}),
 	}),
-	// No requireApproval: this is a structured question, not a pausing tool.
-	// The user's response arrives as their next message; the agent reads it
-	// on the next turn and decides what to do.
 	execute: async (rawInput: unknown) => {
 		const input =
-			rawInput &&
-			typeof rawInput === "object" &&
-			"context" in rawInput
-				? (rawInput as { context: { field: string; proposedValue: string } })
-						.context
-				: (rawInput as { field: string; proposedValue: string });
-		return { field: input.field, proposedValue: input.proposedValue };
+			rawInput && typeof rawInput === "object" && "context" in rawInput
+				? (
+						rawInput as {
+							context: {
+								field: string;
+								question: string;
+								proposedValue: string;
+							};
+						}
+					).context
+				: (rawInput as {
+						field: string;
+						question: string;
+						proposedValue: string;
+					});
+		return {
+			field: input.field,
+			proposedValue: input.proposedValue,
+			ui: {
+				type: "ConfirmCard" as const,
+				props: {
+					field: input.field,
+					question: input.question,
+					proposedValue: input.proposedValue,
+				},
+			},
+		};
 	},
 });
