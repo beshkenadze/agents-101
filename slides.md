@@ -36,9 +36,9 @@ class: 'center-v'
 <!--
 Hi, I'm Aleksandr.
 
-In 20 minutes we go from one LLM API call to a working AI agent.
+In 20 minutes we go from one LLM API call to a working AI agent. We'll unpack three building blocks — completion, structured output, and tools — and then loop them together into a decision cycle. That loop is what makes an agent.
 
-The stack is TypeScript, Vercel AI SDK for the models, and Mastra as the agent framework. At the end, we look at a CV generator demo and compare two backends.
+The stack is TypeScript, Vercel AI SDK for the model calls, and Mastra as the agent framework on top. At the end we look at a CV-generator demo — same chat input, two backends: one a workflow, one an agent — and we compare. All the code is in the repo behind the QR on the last slide.
 -->
 
 ---
@@ -72,15 +72,15 @@ meta: "§ 00"
 <!--
 Here is the plan.
 
-[click] First — completion. Just one call.
+[click] First — completion. The simplest building block: one call in, one string out. Three minutes, because everything else sits on top of it.
 
-[click] Then structured output and tools. We need them later.
+[click] Then structured output and tools. Structured output — how we move from text to typed data. Tools — how a model call becomes an action. I'll also show why a tool call is really just structured output that your runtime executes — once that clicks, agents stop feeling magical.
 
-[click] Next — workflow vs agent, and how to put agents together.
+[click] Next — workflow vs agent, and how to compose agents when one is not enough: supervisor, swarm, router.
 
-[click] And a live demo: a CV generator with two backends.
+[click] Then the live demo — the CV generator, two backends, side by side. About eight minutes on the demo.
 
-[click] Wrap-up and questions.
+[click] And a one-slide recap, questions at the end.
 -->
 
 ---
@@ -110,9 +110,9 @@ const { text } = await generateText({
 <p class="body" style="margin-top: 32px; font-size: 22px;">Send a prompt. Get a string back. That's it.</p>
 
 <!--
-Let's start with the simplest thing. Completion is one call. You send a prompt, you get text back.
+Let's start with the simplest thing. Completion is one call — you send a prompt, you get text back. That's the atomic unit of everything today.
 
-Here is the AI SDK. We call generateText, we pass a model, and we pass a prompt: "rewrite my work experience nicely". We get a string. That's it.
+Here is the AI SDK version. We call generateText, pass a model — gpt-5 in this case — and a prompt: "rewrite my work experience nicely". We get a string back. Fine if you just want a chat reply. But if the downstream is code — building a CV object with fields — a free-form string is the wrong shape. You'd have to parse it, and parsing LLM text is a losing game. We'll fix that in two slides with structured output.
 -->
 
 ---
@@ -142,17 +142,17 @@ status: "§ workflow"
 </div>
 
 <!--
-And this is fine. Completion works great inside a workflow — when the steps are known, and you wire them yourself: call this, then that, then format.
+And this is completely fine. Completion is not "old-fashioned" — it is the right tool when the plan is known in advance. You pack it into a workflow: step one extracts skills, step two formats experience, step three composes the result. You wire the steps. The model fills the blanks inside each step.
 
-[click] It is predictable — every step is in your code.
+[click] It is predictable — every step lives in your code, not in the model's reasoning. The trace reads top-to-bottom like a normal function.
 
-[click] It is cheap — fewer tokens, fewer round-trips.
+[click] It is cheap — fewer tokens per step, and no tool-calling loop eating turns. Each step is one clean round-trip.
 
-[click] It is easy to debug — you have logs at every step.
+[click] It is easy to debug — logs at every boundary. If step two produced garbage, you know exactly where to look.
 
-[click] And it is safe — no surprise tool calls.
+[click] And it is safe — there are no surprise tool calls, no off-task detours. The model literally cannot do something you did not explicitly ask it to do.
 
-If you can split the task into fixed steps, completion is enough.
+Rule of thumb: if you can split the task into fixed steps, completion inside a workflow is enough. Agents are not required by default.
 -->
 
 ---
@@ -183,11 +183,11 @@ status: "§ agent loop"
 </div>
 
 <!--
-But sometimes it is different. You don't have a clear plan. You didn't think about every case. You want the model to decide what to do next — or to try, see an error, and try another way.
+But sometimes it is different. You don't have a clean flowchart. You did not think through every case. Or you explicitly want the model to try something, see the error, and pick another path — without you scripting every retry.
 
-This is where an agent comes in. Same model, but with tools and a loop. It picks a function, looks at the result, and decides the next step.
+This is where an agent appears. Same model, same completion call underneath, but wrapped in a loop and given a set of tools. The model picks a tool, looks at the result, decides what to do next, maybe calls another tool, maybe answers. Same thing over and over until it decides it is done.
 
-[click] It can recover from errors, ask for missing info, and handle cases you did not plan for.
+[click] That loop is where the "agentic" behavior lives: it recovers from broken tool calls by trying a different approach, it asks the user for missing information, it handles branches you did not anticipate. The model is still just predicting tokens — but the runtime around it makes those predictions feel like decisions.
 -->
 
 ---
@@ -225,11 +225,13 @@ status: "§ trade-offs"
 <p class="rule-center" v-click><span style="color: var(--accent)">Know your steps?</span> → workflow. &nbsp;·&nbsp; <span style="color: var(--warn)">Don't?</span> → agent. &nbsp;·&nbsp; Either way: <span style="color: var(--fg);">know the risks</span>.</p>
 
 <!--
-But flexibility has a price.
+But flexibility is not free. Let me be concrete about the trade.
 
-[click] More tokens, less predictable behavior. And important: an agent can bypass your guardrails and go off-task. It can do things you did not plan.
+What you get is real: agents genuinely recover from broken tool calls, they ask for missing data, they handle paths you did not foresee. I have seen them fix JSON parse errors on their own, pick different tools after a failure, politely ask the user for a date they need.
 
-[click] Simple rule: if you know the steps, use a workflow with completion. If you don't, use an agent. Either way — keep the risks in mind.
+[click] What you pay: more tokens per turn — the model reasons over the tool list and the prior results every step. Runs are harder to reproduce: same input, different tool order, slightly different output. And this one matters the most in production — an agent can bypass your guardrails. You ask it to format a CV, it sees "dollars" in the text, decides to call your pricing API, burns budget, confuses the user. The same freedom that makes it adaptive makes it drift.
+
+[click] Simple rule. Know the steps — workflow. Don't know the steps — agent. Either way, know the risks. In the demo at the end we run the same task through both, and you'll see the difference concretely.
 -->
 
 ---
@@ -273,13 +275,13 @@ const { object } = await generateObject({
 </div>
 
 <!--
-Before we go deeper into agents, one useful thing: structured output.
+Before we go deeper into agents, one useful piece: structured output. Actually useful everywhere — not just with agents — so worth a proper pause.
 
-When a model replies with free text, it is fine for chat — but not for code. You need an object with clear fields, not a paragraph. generateObject from the AI SDK solves this. You pass a Zod schema, you get a typed object back.
+When a model replies with free text, it is fine for a chat bubble. Useless for code. Your downstream wants an object with named fields, not a paragraph to parse. generateObject from the AI SDK solves this directly: you pass a Zod schema, you get a typed object back. No prompt engineering like "please respond in JSON", no regex cleanup. The SDK handles it.
 
-[click] It works everywhere — in workflows, in validation, inside agents. Anywhere you need a predictable output shape.
+[click] It works everywhere we've discussed — inside a workflow step, as a validation pass, inside an agent tool. Anywhere you need a predictable output shape. In our demo the same pattern is used three times: workflow extract step, agent extractMetadata tool, and the memory schema. One Zod schema, three call sites.
 
-[click] One gotcha: models sometimes break the JSON. It happens. You can plug in a JSON fixer, or send the broken answer to a cheap model — nano or mini — to repair it.
+[click] One honest gotcha: models occasionally still break JSON — long outputs, deep nesting, or edge cases. The standard fix is a repair pass. Either plug in a JSON fixer library, or re-send the broken output to a cheap model — gpt-5-nano or gpt-5-mini — whose only job is "parse this mess, return valid JSON". Two-stage repair is boring and reliable.
 -->
 
 ---
@@ -305,13 +307,13 @@ status: "§ bridge"
 <p class="body" style="margin-top: 32px; font-size: 24px;" v-click>The model doesn't <em style="color: var(--accent); font-style: normal;">call</em> anything — it <strong>asks</strong> in JSON. Your code calls.</p>
 
 <!--
-Quick bridge between structured output and tools.
+One quick bridge before we talk tools — because structured output and tools are much closer than they look from the outside.
 
-A tool call is just structured output that the runtime executes. The model reads the tool description and the parameter schema, and returns JSON: "I want to call this tool with these params". The model itself does not call anything. Your code does.
+A tool call is structured output that your runtime executes. Same mechanism as generateObject, same Zod engine, same JSON. The difference is only what happens after. With generateObject you get an object and you use it. With a tool call, the model replies with JSON — "I want to call extractMetadata with this text" — and your runtime looks up the function, executes it, and feeds the result back into the next model turn.
 
-This is why tools look like generateObject under the hood — same engine, same Zod. The runtime then executes the function and feeds the result back.
+The model never calls anything. It cannot. It is a text generator. All it does is predict the name of a tool and its arguments. Your code does the actual work.
 
-[click] Remember: the model asks, your code calls.
+[click] Once you see it this way, tools stop being magical. The model asks. Your code calls. Everything else — the loop, the retry, the tool selection — is runtime logic around that simple fact.
 -->
 
 ---
@@ -359,19 +361,19 @@ export const extractMetadata = createTool({
 <p class="body" style="margin-top: 28px; font-size: 20px;" v-click="5">The agent chooses <em style="color: var(--accent); font-style: normal;">when</em> and <em style="color: var(--accent); font-style: normal;">which</em> tool to call. You don't.</p>
 
 <!--
-Now, tools. This is the agent part.
+Now tools. This is where agent behavior actually happens.
 
-A tool is a function the model can call itself. It has a name, a description, a Zod schema for parameters, and an execute function.
+A tool is a function the model can pick from a list. On the left — actual code from our demo — is Mastra's createTool. Five things: an id, a description, an input Zod schema, an output Zod schema, and an execute function. extractMetadata takes free-form text and returns a DraftCV. The model only ever sees the description and the schemas — never the execute body — and makes its decision from that.
 
-[click] The model reads the description.
+[click] Step one, the model reads the description. This is the single most important part of a tool. Vague description, dead tool — the agent never picks it. Good descriptions read like one-liners: what it does, when to reach for it.
 
-[click] It decides the tool fits the task.
+[click] It decides whether this tool fits the current task. Under the hood this is a completion call with the tool list in the prompt — nothing exotic.
 
-[click] It fills the inputSchema — the Zod schema — with arguments.
+[click] It fills the inputSchema — same Zod engine we just saw with generateObject — with arguments it inferred from context.
 
-[click] Execute runs, and the result goes back to the model.
+[click] execute runs. The return value is fed back into the next model turn as "tool result", and the loop continues.
 
-[click] Key point: the agent picks when and which tool to use. You, the developer, do not control this directly.
+[click] Key point: you do not call the tool. The agent decides when and which. You ship the schema and the execute body and let go. This is also what makes agents anxiety-inducing the first time you build one — you wrote the code, but you are not calling it.
 -->
 
 ---
@@ -414,13 +416,13 @@ status: "§ choose wisely"
 </div>
 
 <!--
-So, two approaches. When do you pick which one?
+So, two approaches. When do you pick which one? Let me lay them side by side.
 
-Workflow is when you write the steps yourself. Deterministic — you control every step. Cheaper. Easier to debug. And a workflow is not "dumb" — with human-in-the-loop you can copy agent behavior: the workflow stops, asks the user, then continues. You keep control.
+Workflow is when you write the steps yourself. Deterministic — you own every step. Cheaper per turn. Easier to debug because the trace reads like a log file: step one, step two, step three. And a workflow is not "dumb" or inflexible — with human-in-the-loop you can emulate a lot of agent-like behavior. The workflow pauses, asks the user a question, gets the answer, continues. Exactly what we do in our demo's workflow backend. Control stays with you.
 
-[click] An agent is when you give the model a goal and a set of tools, and it does the rest. It is more adaptive: it recovers from errors, it asks for missing data, it handles cases you did not plan. But there is a risk — the agent can go out of scope, bypass your guardrails, and do things you did not want.
+[click] An agent is when you hand the model a goal and a toolbox, and let it figure out the rest. Adaptivity is real: it recovers, asks for missing data, handles cases you did not script. But the risk is also real — an agent can go out of scope, bypass your guardrails, and do things you did not intend. The same freedom that makes it powerful makes it drift.
 
-Simple rule: if you can draw a flowchart from start to end — workflow. If the path depends on decisions along the way — agent. You do not need an agent everywhere.
+Simple test: if you can draw a flowchart from start to end, workflow. If the path depends on decisions that only become clear mid-run, agent. Both are legitimate. You do not need an agent everywhere — in many real products, a workflow with one smart step in the middle is plenty.
 -->
 
 ---
@@ -473,15 +475,15 @@ status: "§ orchestration"
 <p class="rule-center" v-click>In real life you mix them: a workflow step that is an agent with a supervisor inside.</p>
 
 <!--
-But one agent is rarely enough. There are three main patterns — look at them side by side.
+And in real products, one agent is rarely enough. You end up composing several. Three patterns worth knowing by name.
 
-Supervisor: one lead agent splits the task and sends parts to specialists. The lead decides, the others do the work.
+Supervisor — one lead agent breaks down the task and dispatches subtasks to specialists. "Write a report" → lead splits it into research, draft, edit, hands each to a different agent, assembles the result. The lead decides, the specialists execute. Classic manager-and-team.
 
-Swarm: agents run in parallel, no boss, results merge at the end. Good for independent sub-tasks.
+Swarm — agents run in parallel, no lead. Each one works independently, results merge at the end. Good for naturally decomposable work: "summarize these ten documents" — one agent per document, all run at once.
 
-Router: one agent only routes — reads the request, picks the specialist. It doesn't do the work itself.
+Router — an agent whose only job is to route. It reads the request, picks the right specialist, hands off. Doesn't execute itself. The rest of the system doesn't even know routing happened.
 
-[click] In practice, we mix these. A workflow with a few steps, where one step is an agent with a supervisor inside. You don't have to pick only one.
+[click] And in practice you mix. A workflow with four steps, where step two is a supervisor agent with three specialists behind it. Or a router at the top that sends code questions to one agent and text questions to another. You don't pick one pattern — you pick what each layer of the system needs. Don't get stuck arguing which pattern is "right" — pick the one that matches the shape of your task.
 -->
 
 ---
@@ -499,7 +501,9 @@ class: 'center-v'
 <p class="body" style="margin-top: 40px; font-size: 28px; max-width: 60ch; color: var(--fg-dim);">Same chat input. Two backends — workflow and agent. We compare.</p>
 
 <!--
-Okay, let's put it all together. I wrote a small app — a chat where you can generate a CV. Under the hood there are two backends: one uses a workflow, the other uses an agent. I will show both, and we will compare.
+Okay, let's put this all together. I built a small app ahead of time — a chat where you describe yourself in free text, and it generates a CV as a PDF. The twist: under the hood there are two completely different backends. One is a workflow — the steps we just talked about. The other is an agent — the loop we just talked about. A toggle switches between them. Same chat input, same final PDF, very different paths to get there. I'll run both, point out what to watch for, and at the end we compare what they cost and what they give up.
+
+Not "live coding" live — all the code is written. What's live is the comparison. You'll see both backends react to the same prompt in real time.
 -->
 
 ---
@@ -524,15 +528,15 @@ status: "§ two backends"
 </div>
 
 <!--
-Quick look at the app before we open the code.
+Quick map before we open the running app.
 
-The user types in the chat. The request goes to one of two backends — workflow or agent. Both return the same CV object: name, skills, jobs.
+User types in the chat. The same chat, always. The request goes to one of two backends — workflow or agent — selected by a toggle in the UI. Both eventually return the same CV object: name, headline, skills, jobs. Same Zod schema validates both outputs.
 
-[click] The UI doesn't know which backend ran.
+[click] The UI doesn't know which backend ran. It receives the same set of streaming events either way — step updates, CV preview, confirmation card. Same React components render both.
 
-[click] We switch with a flag in the request.
+[click] We switch with a flag in the request body: backend equals "workflow" or "agent". Nothing else in the request changes. Same message, same thread id.
 
-[click] The output shape is identical. That's what lets us compare fairly — same input, same output, different paths.
+[click] The output shape is identical — that is the whole point. Same input going in, same CV schema coming out, very different internals. That's what makes the comparison honest — we're not comparing apples to oranges, we're comparing two implementations of the same contract.
 -->
 
 ---
@@ -564,11 +568,13 @@ status: "§ input"
 <p class="body" style="margin-top: 28px; font-size: 22px;" v-click>Same input below. Watch how the two backends reach the same object differently.</p>
 
 <!--
-The user writes in the chat in free form: "My name is Aleksandr. 15+ years in product architecture — LLM, AI, ML, zero-knowledge security. At Denovo: consulting for LegalTech and EdTech startups. Stack: TypeScript, Node, Tauri, Electron, on-device ML, LoRA fine-tuning."
+The input is free text. Not a form, not a wizard, not "paste your LinkedIn URL". Just a chat message the way you'd actually describe yourself.
 
-[click] The goal — a structured CV: name, skills as an array, jobs as an array.
+For the demo I'll paste something like this: "My name is Aleksandr. 15+ years in product architecture — LLM, AI, ML, zero-knowledge security. At Denovo: consulting for LegalTech and EdTech startups. Stack: TypeScript, Node, Tauri, Electron, on-device ML, LoRA fine-tuning." That's the shape of input a user might actually type.
 
-[click] We send the same input to both backends. Let's watch the two paths.
+[click] The goal — a typed CV object: name, headline, skills array, jobs array. Validated against the same Zod schema regardless of backend.
+
+[click] Small trick I'll use on stage: I'll send a partial version first — leave out something obvious like the company name — and watch how each backend handles the missing field. That's where the two paths differ in the most interesting way. Workflow runs a code-level branch and asks a scripted question. Agent runs its loop and decides for itself. Same outcome, different mechanism — you'll see it clearly.
 -->
 
 ---
@@ -603,17 +609,35 @@ export const cvWorkflow = createWorkflow({ id: "cv-workflow", inputSchema })
 </div>
 
 <!--
-Backend A — workflow. Four named steps, wired by us with Mastra's createWorkflow.
+Backend A — workflow. Let me first walk through the code on the slide, then we switch to the running app.
 
-Extract is the only LLM call — generateObject on a cheap nano model, returns a partial draft. Merge is pure code: new fields fill empty slots, filled fields are never wiped. Validate runs the strict CVSchema through safeParse. Then branch — that's a code-level switch, not the model deciding — either we ask the user for the missing field, or we confirm and render the PDF.
+Four named steps, wired by us with Mastra's createWorkflow. The chain is: extract, merge, validate, branch.
 
-[click] One LLM call per turn — all orchestration is code.
+Extract is the only LLM call in the whole flow — one generateObject on gpt-5-nano. Cheap, fast, non-reasoning. It returns a partial DraftCV — just the fields it could infer from the text.
 
-[click] We use gpt-5-nano for extraction. Mechanical structured output is where cheap models shine.
+Merge is pure code. No model involved. New fields fill empty slots; already-filled fields are never wiped by null. That's how state accumulates across turns.
 
-[click] The branch is deterministic — we own every fork.
+Validate runs the strict CVSchema through safeParse. Either passes, or returns the first missing field as an issue.
 
-This is interactive by the way: state lives across turns, so a missing field is asked, not hallucinated.
+Then branch — this is Mastra's .branch() primitive, but the predicate is just a boolean we computed in the validate step. Either askStep — pick a question for the missing field — or readyStep — we're good, ask the user to confirm the PDF. Branch is a code-level switch, not a model decision.
+
+[click] So per turn — one LLM call only. The rest is deterministic code.
+
+[click] gpt-5-nano is the point here. Mechanical structured extraction is exactly where cheap models shine — no reasoning, just "pull fields out of this text". You could use gpt-5 and the quality wouldn't measurably improve, but you'd spend 10x the tokens.
+
+[click] The branch fork is ours. We own every path the workflow can take. Nothing surprises you.
+
+>>> LIVE — switch to the running app <<<
+
+In the chat, make sure the toggle says "workflow". Start a new thread. Paste a partial version of the prompt — leave out the company: "My name is Aleksandr, 15 years in product architecture, TypeScript and ML, consulting for LegalTech startups." Send.
+
+Watch the numbered step blocks appear in order. Extract — point at it, "one LLM call, gpt-5-nano, returns a DraftCV". Merge — "pure code". Validate — "Zod safeParse, fails because company is missing". ask-field — "code-level branch picked the question".
+
+The bot asks "Which company was that at?". Reply "Denovo LLC". Send. Same chain runs again — extract, merge, validate — this time validate passes. Branch takes readyStep. CV preview card appears. Confirm card with Yes/No.
+
+Click Yes. PDF renders. Download link appears. Open it — there's the CV.
+
+Recap on stage: every step was visible. Every step was our code. One LLM call per turn. If anything had broken, I could point at the exact step.
 -->
 
 ---
@@ -649,19 +673,37 @@ export const cvAgent = new Agent({
 </div>
 
 <!--
-Backend B — agent. Same task, same CV shape. But instead of wiring steps, we give the model instructions, five tools, and per-thread memory.
+Backend B — agent. Same task. Same CV shape. Completely different structure.
 
-The tools cover the same ground as the workflow plus a couple of extras: extractMetadata is the same one-shot extractor, validateCV runs Zod, askConfirmation asks the user about a field, generatePdf renders the file — and webSearch is only called if the model decides it needs it. For example, "Denovo LLC" — it may google to verify the company.
+No steps wired by us. Just three things: instructions, tools, memory.
 
-[click] The agent chooses the order. No branch in our code.
+The instructions are the "job description" — extract fields, validate them, confirm with the user, generate the PDF. And the hard rule: never call generatePdf without explicit approval. That last line is our only guardrail against the agent running away.
 
-[click] The output shape is the same — we validate against CVSchema either way.
+Five tools. Four overlap with the workflow: extractMetadata is the same one-shot extractor; validateCV runs the same Zod safeParse; askConfirmation renders a Yes/No card in the UI; generatePdf renders the file. One extra — webSearch via Firecrawl — is there in case the agent decides it needs to verify a company name. Only fires if the agent decides. That's the key word.
 
-[click] webSearch is opt-in — only fires when the model thinks it's worth the tokens. That's the agent judgement call.
+And memory — per-thread working memory with a Zod schema. We'll dig into that on the next slide. For now, just know: the draft survives across turns.
 
-[click] And we pay for it: more tokens, higher variance between runs.
+[click] The agent chooses the tool order. There is no .branch() in our code. The state machine is in the instructions — the prompt — not in createWorkflow.
 
-Both backends reach the same PDF. Workflow is cheaper and predictable. Agent is flexible.
+[click] The output shape is identical to the workflow. validateCV runs the same CVSchema. The CV preview card uses the same Zod type. The PDF template is the same file.
+
+[click] webSearch is opt-in. The model decides when to reach for it. For a well-known company it might skip; for something ambiguous it might fire. You cannot predict this and that's the point — that is agent judgement.
+
+[click] The price tag: more LLM calls per turn, because the agent reasons over the tool list every step. Also more variance — run the same input twice, tool order may differ, timing differs. This is the trade-off slide from Block 1, made concrete.
+
+>>> LIVE — switch toggle to agent <<<
+
+Flip the backend toggle in the UI to "agent". Start a fresh thread — working memory is per-thread, we want a clean state. Send the same partial prompt as last time.
+
+Watch tool blocks stream in. extractMetadata fires — same as workflow's extract step. Then updateWorkingMemory — that's Mastra writing the draft back into per-thread memory. Then validateCV — and this time it's the agent calling Zod via a tool, not us calling Zod in code. Issue returned.
+
+The agent decides what to do with the issue — sometimes it writes a text question directly, sometimes it calls askConfirmation. It's not deterministic. That's the point.
+
+Reply "Denovo LLC". Here's where it gets interesting — watch for webSearch to fire. The agent may google "Denovo LLC" to validate the company name. Sometimes it does, sometimes it doesn't. If it does — show the search results on screen.
+
+Then extractMetadata again with the new message. updateWorkingMemory. validateCV — passes now. askConfirmation — Yes/No card. Yes. generatePdf. Same PDF output as backend A.
+
+Key observation to call out live: same input, same final PDF, but you saw the agent take a different path. More tool calls. Maybe a web search. More tokens on the meter. That is the cost of flexibility made visible.
 -->
 
 ---
@@ -705,17 +747,19 @@ export const memory = new Memory({
 <p class="body" style="margin-top: 24px;" v-click="4">Same <code>DraftCVSchema</code> the workflow uses. <span style="color: var(--accent)">One Zod schema, three call-sites.</span></p>
 
 <!--
-One more thing worth showing — working memory.
+One more thing, because it ties the whole demo together — working memory.
 
-The agent isn't just a loop, it has persistent state across turns. Mastra gives you this out of the box: you set a Zod schema — same DraftCVSchema we use everywhere — and Mastra injects the current draft into the prompt every turn. The agent calls updateWorkingMemory to write changes back.
+An agent is not just a tool loop, it has persistent state across turns. Mastra ships this out of the box with the Memory class on the right. Storage can be SQLite, LibSQL, Postgres — whatever. The interesting part is workingMemory: you enable it and pass a Zod schema. Same DraftCVSchema we use everywhere. Mastra takes the current value and injects it into the prompt as part of the system message at every turn. The agent calls the built-in updateWorkingMemory tool to write changes back.
 
-[click] Turn 1 the user says "I'm Aleksandr, TypeScript and ML" — name and skills land in memory.
+What this buys you concretely —
 
-[click] Turn 2 "at Denovo as consultant since 2024" — jobs gets added, name and skills are still there, agent doesn't re-extract them.
+[click] Turn 1. User says "I'm Aleksandr, TypeScript and ML, consulted for legaltech". Agent extracts. Name lands. Skills land. Headline lands. Working memory now has those three fields filled, jobs empty.
 
-[click] Turn 3 "yes generate" — agent reads memory, validates, calls generatePdf.
+[click] Turn 2. User says "at Denovo as consultant since 2024". Agent reads memory — sees name and skills are already there. Does NOT re-extract them. Extracts only what's new — jobs. Updates memory with jobs added; name and skills untouched. This is the difference between an agent that feels dumb — "wait, what was my name again?" — and one that feels coherent.
 
-[click] Notice: same Zod schema is used by the workflow's extract step, by the validate tool, and as the memory schema. One source of truth. That's what makes the whole thing hold together.
+[click] Turn 3. User says "yes, generate". Agent reads memory, validates the full CV, calls generatePdf. Done.
+
+[click] The point that matters most. Same Zod schema is used in three places: the workflow's extract step, the agent's validateCV tool, and Mastra's memory configuration. One source of truth, three call sites. That discipline is what keeps the two backends from drifting apart. Without a shared schema, the workflow would accept CVs the agent rejects and vice versa. With it, the contract is enforced by the type system.
 -->
 
 ---
@@ -752,14 +796,19 @@ beshkenadze.github.io/agents-101
 </div>
 
 <!--
-Let's recap. We went from a single generateText call to a working agent.
+Quick recap. We went from a single generateText call all the way to a working agent with memory, step by step.
 
-Completion — for predictable steps.
-Structured output — to get data, not text.
-Tools — so the agent can act.
-Agent — when the path is not known in advance. But remember the risks.
+Completion — one call in, one string out. Use it when the plan is fixed.
 
-The demo repo is behind the QR code — all the code is there. The Mastra and AI SDK docs are in the README.
+Structured output — so you get typed data instead of paragraphs you have to parse. Plug in a repair pass if the JSON breaks.
 
-Thanks! Questions?
+Tools — structured output that your runtime executes. This is how the agent acts on the world instead of just talking about it.
+
+Memory — state across turns, backed by a Zod schema so the same contract that validates output also shapes what the agent remembers. One schema, three call sites — that's the spine.
+
+Agent — completion plus tools plus a loop. Use it when the path isn't knowable in advance. Remember the costs: more tokens, higher variance between runs, the possibility of drift. Start with a workflow, reach for an agent when the workflow can't express the task.
+
+QR code — the demo repo is behind it. The workflow version and the agent version live side by side in the same codebase, along with the shared Zod schemas. Links to Mastra and AI SDK docs in the README.
+
+Thanks for listening. Questions.
 -->
