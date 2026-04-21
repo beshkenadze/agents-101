@@ -2,16 +2,24 @@
 
 import { useChat } from "@ai-sdk/react";
 import { JSONUIProvider, Renderer } from "@json-render/react";
-import { DefaultChatTransport } from "ai";
+import { DefaultChatTransport, type ToolUIPart } from "ai";
+import { type ReactNode, useRef, useState } from "react";
 import {
-	type FormEvent,
-	type KeyboardEvent,
-	useEffect,
-	useRef,
-	useState,
-} from "react";
-import type { ToolUIPart } from "ai";
-import type { ReactNode } from "react";
+	Conversation,
+	ConversationContent,
+	ConversationScrollButton,
+} from "@/components/ai-elements/conversation";
+import {
+	PromptInput,
+	type PromptInputMessage,
+	PromptInputSubmit,
+	PromptInputTextarea,
+} from "@/components/ai-elements/prompt-input";
+import { Shimmer } from "@/components/ai-elements/shimmer";
+import {
+	Suggestion,
+	Suggestions,
+} from "@/components/ai-elements/suggestion";
 import {
 	Tool,
 	ToolContent,
@@ -19,10 +27,6 @@ import {
 	ToolInput,
 	ToolOutput,
 } from "@/components/ai-elements/tool";
-import {
-	Suggestion,
-	Suggestions,
-} from "@/components/ai-elements/suggestion";
 import { type UISpec, UISpecSchema } from "@/lib/schemas";
 import { registry } from "@/lib/ui/registry";
 import { ReplyContext } from "@/lib/ui/reply-context";
@@ -87,66 +91,18 @@ export default function ChatPage() {
 		}),
 	});
 
-	const chatRef = useRef<HTMLDivElement>(null);
-	const inputRef = useRef<HTMLTextAreaElement>(null);
 	const [input, setInput] = useState("");
 
-	// auto-scroll on new messages
-	useEffect(() => {
-		const el = chatRef.current;
-		if (!el) return;
-		requestAnimationFrame(() => {
-			el.scrollTop = el.scrollHeight;
-		});
-	}, [messages]);
-
-	// focus input on mount
-	useEffect(() => {
-		inputRef.current?.focus();
-	}, []);
-
-	// cmd+K to clear (not implemented fully — useChat has no clear method exposed,
-	// but we keep the shortcut advertised in the hints)
-	useEffect(() => {
-		const onKey = (e: globalThis.KeyboardEvent) => {
-			if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
-				e.preventDefault();
-				location.reload();
-			}
-		};
-		window.addEventListener("keydown", onKey);
-		return () => window.removeEventListener("keydown", onKey);
-	}, []);
-
-	const autoGrow = () => {
-		const el = inputRef.current;
-		if (!el) return;
-		el.style.height = "auto";
-		el.style.height = `${Math.min(el.scrollHeight, 120)}px`;
-	};
-
-	const handleSubmit = (e?: FormEvent) => {
-		e?.preventDefault();
-		const text = input.trim();
+	const handleSubmit = (message: PromptInputMessage) => {
+		const text = message.text?.trim();
 		if (!text || status === "streaming" || status === "submitted") return;
 		sendMessage({ text });
 		setInput("");
-		requestAnimationFrame(autoGrow);
-	};
-
-	const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
-		if (e.key === "Enter" && !e.shiftKey) {
-			e.preventDefault();
-			handleSubmit();
-		}
 	};
 
 	const handleSuggestion = (text: string) => {
-		setInput(text);
-		requestAnimationFrame(() => {
-			autoGrow();
-			inputRef.current?.focus();
-		});
+		sendMessage({ text });
+		setInput("");
 	};
 
 	const busy = status === "streaming" || status === "submitted";
@@ -193,39 +149,38 @@ export default function ChatPage() {
 							</button>
 						</div>
 
-						<div className="chat" ref={chatRef}>
-							<SystemLine role="// init">
-								session started · model: gpt-5-mini · tools: extractSkills,
-								formatExperience, generatePdf, webSearch
-							</SystemLine>
-							<AssistantLine>
-								Hey. Tell me about your work — skills, jobs, years — in plain
-								words. I'll turn it into a structured CV and export it to PDF.
-							</AssistantLine>
+						<Conversation className="chat">
+							<ConversationContent className="gap-0 p-0">
+								<SystemLine role="// init">
+									session started · model: gpt-5-mini · tools: extractSkills,
+									formatExperience, generatePdf, webSearch
+								</SystemLine>
+								<AssistantLine>
+									Hey. Tell me about your work — skills, jobs, years — in plain
+									words. I'll turn it into a structured CV and export it to PDF.
+								</AssistantLine>
 
-							{messages.map((m, mi) => (
-								<MessageView
-									key={m.id}
-									message={m}
-									isLast={mi === messages.length - 1}
-									busy={busy}
-									backend={backend}
-								/>
-							))}
+								{messages.map((m, mi) => (
+									<MessageView
+										key={m.id}
+										message={m}
+										isLast={mi === messages.length - 1}
+										busy={busy}
+										backend={backend}
+									/>
+								))}
 
-							{busy && messages.at(-1)?.role !== "assistant" && (
-								<div className="msg assistant">
-									<span className="role">agent</span>
-									<span className="content">
-										<span className="thinking">
-											<span className="d" />
-											<span className="d" />
-											<span className="d" />
+								{busy && messages.at(-1)?.role !== "assistant" && (
+									<div className="msg assistant">
+										<span className="role">agent</span>
+										<span className="content">
+											<Shimmer>thinking…</Shimmer>
 										</span>
-									</span>
-								</div>
-							)}
-						</div>
+									</div>
+								)}
+							</ConversationContent>
+							<ConversationScrollButton />
+						</Conversation>
 
 						{showSuggestions && (
 							<Suggestions className="px-4 pb-2">
@@ -239,31 +194,18 @@ export default function ChatPage() {
 							</Suggestions>
 						)}
 
-						<form className="inputbar" onSubmit={handleSubmit}>
-							<span className="prompt">❯</span>
-							<textarea
-								ref={inputRef}
-								rows={1}
+						<PromptInput onSubmit={handleSubmit} className="inputbar">
+							<PromptInputTextarea
 								placeholder="type a message, enter to send · shift+enter for newline"
-								autoComplete="off"
-								spellCheck={false}
 								value={input}
-								onChange={(e) => {
-									setInput(e.target.value);
-									autoGrow();
-								}}
-								onKeyDown={handleKeyDown}
+								onChange={(e) => setInput(e.target.value)}
 								disabled={busy}
 							/>
-							<button
-								className="send"
-								type="submit"
+							<PromptInputSubmit
+								status={status}
 								disabled={busy || !input.trim()}
-							>
-								<span>run</span>
-								<span className="kbd">↵</span>
-							</button>
-						</form>
+							/>
+						</PromptInput>
 					</div>
 
 					<div className="hints">
