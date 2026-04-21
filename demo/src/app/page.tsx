@@ -10,6 +10,19 @@ import {
 	useRef,
 	useState,
 } from "react";
+import type { ToolUIPart } from "ai";
+import type { ReactNode } from "react";
+import {
+	Tool,
+	ToolContent,
+	ToolHeader,
+	ToolInput,
+	ToolOutput,
+} from "@/components/ai-elements/tool";
+import {
+	Suggestion,
+	Suggestions,
+} from "@/components/ai-elements/suggestion";
 import { type UISpec, UISpecSchema } from "@/lib/schemas";
 import { registry } from "@/lib/ui/registry";
 import { ReplyContext } from "@/lib/ui/reply-context";
@@ -215,18 +228,15 @@ export default function ChatPage() {
 						</div>
 
 						{showSuggestions && (
-							<div className="suggestions">
+							<Suggestions className="px-4 pb-2">
 								{SUGGESTIONS.map((s) => (
-									<button
+									<Suggestion
 										key={s}
-										type="button"
-										className="chip"
-										onClick={() => handleSuggestion(s)}
-									>
-										{s}
-									</button>
+										suggestion={s}
+										onClick={handleSuggestion}
+									/>
 								))}
-							</div>
+							</Suggestions>
 						)}
 
 						<form className="inputbar" onSubmit={handleSubmit}>
@@ -309,53 +319,6 @@ function Divider({ label }: { label: string }) {
 	return (
 		<div className="divider">
 			<span>{label}</span>
-		</div>
-	);
-}
-
-function ToolBlock({
-	title,
-	args,
-	done,
-	result,
-}: {
-	title: string;
-	args?: Record<string, unknown> | string;
-	done?: boolean;
-	result?: string;
-}) {
-	const entries =
-		args && typeof args === "object"
-			? Object.entries(args)
-			: args
-				? [["input", args]]
-				: [];
-	return (
-		<div className="tool" data-done={done ? "" : undefined}>
-			<span className="role">tool</span>
-			<div className="body">
-				<div className="head">
-					<span className="spin" />
-					<span>{title}</span>
-				</div>
-				{entries.length > 0 || result ? (
-					<div className="args">
-						{entries.map(([k, v]) => {
-							const raw = typeof v === "string" ? v : JSON.stringify(v);
-							const preview = raw.length > 160 ? `${raw.slice(0, 160)}…` : raw;
-							return (
-								<div key={k}>
-									<span className="k">{k}:</span>{" "}
-									<span className="s">
-										{typeof v === "string" ? `"${preview}"` : preview}
-									</span>
-								</div>
-							);
-						})}
-						{done && result ? <div className="done">→ {result}</div> : null}
-					</div>
-				) : null}
-			</div>
 		</div>
 	);
 }
@@ -553,40 +516,33 @@ function MessageView({
 			)}
 
 			{steps.map((s) => (
-				<ToolBlock
-					key={`step-${s.step}`}
-					title={`step ${s.step} · ${STEP_LABELS[s.step] ?? s.label}`}
-					done={s.status === "done"}
-					result={
-						s.status === "done"
-							? s.step === 4
-								? "pdf saved"
-								: s.step === 3
-									? "cv assembled"
-									: "ok"
-							: undefined
-					}
-				/>
+				<Tool key={`step-${s.step}`} defaultOpen={false}>
+					<ToolHeader
+						type="dynamic-tool"
+						toolName={`step ${s.step} · ${STEP_LABELS[s.step] ?? s.label}`}
+						state={s.status === "done" ? "output-available" : "input-available"}
+					/>
+				</Tool>
 			))}
 
 			{toolParts.map((p, i) => {
-				const name = p.type.replace(/^tool-/, "");
-				const state = p.state ?? "input-streaming";
-				const done = state === "output-available" || state === "output-error";
-				const resultPreview =
-					typeof p.output === "string"
-						? p.output.slice(0, 120)
-						: p.output
-							? JSON.stringify(p.output).slice(0, 120)
-							: undefined;
+				const state = (p.state ?? "input-streaming") as ToolUIPart["state"];
 				return (
-					<ToolBlock
+					<Tool
 						key={p.toolCallId ?? `${message.id}-tool-${i}`}
-						title={`${name}()`}
-						args={(p.input as Record<string, unknown>) ?? undefined}
-						done={done}
-						result={resultPreview}
-					/>
+						defaultOpen={false}
+					>
+						<ToolHeader type={p.type as ToolUIPart["type"]} state={state} />
+						<ToolContent>
+							{p.input !== undefined && (
+								<ToolInput input={p.input as ToolUIPart["input"]} />
+							)}
+							<ToolOutput
+								output={p.output as ReactNode}
+								errorText={undefined as unknown as ToolUIPart["errorText"]}
+							/>
+						</ToolContent>
+					</Tool>
 				);
 			})}
 
