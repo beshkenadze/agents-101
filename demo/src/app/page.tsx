@@ -554,11 +554,7 @@ function MessageView({
 				<div className="msg assistant">
 					<span className="role">agent</span>
 					<span className="content">
-						<span className="thinking">
-							<span className="d" />
-							<span className="d" />
-							<span className="d" />
-						</span>
+						<Shimmer>thinking…</Shimmer>
 					</span>
 				</div>
 			)}
