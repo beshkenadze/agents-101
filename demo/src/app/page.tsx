@@ -183,15 +183,16 @@ export default function ChatPage() {
 						</Conversation>
 
 						{showSuggestions && (
-							<Suggestions className="px-4 pb-2">
+							<div className="suggestions">
 								{SUGGESTIONS.map((s) => (
 									<Suggestion
 										key={s}
 										suggestion={s}
 										onClick={handleSuggestion}
+										className="chip"
 									/>
 								))}
-							</Suggestions>
+							</div>
 						)}
 
 						<PromptInput onSubmit={handleSubmit} className="inputbar">
