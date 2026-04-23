@@ -149,8 +149,8 @@ export default function ChatPage() {
 							</button>
 						</div>
 
-						<Conversation className="chat">
-							<ConversationContent className="gap-0 p-0">
+						<Conversation>
+							<ConversationContent className="flex flex-col gap-5 px-7 py-6">
 								<SystemLine role="// init">
 									session started · model: gpt-5-mini · tools: extractSkills,
 									formatExperience, generatePdf, webSearch

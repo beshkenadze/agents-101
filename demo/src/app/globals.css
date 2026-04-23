@@ -92,6 +92,20 @@
 * {
 	box-sizing: border-box;
 }
+
+/* Browser default focus ring is blue — recolor to terminal accent. */
+*:focus-visible {
+	outline: 2px solid var(--accent-dim);
+	outline-offset: 2px;
+	border-radius: 4px;
+}
+button:focus-visible,
+[role="button"]:focus-visible,
+textarea:focus-visible {
+	outline: none;
+	box-shadow: 0 0 0 2px var(--accent-dim);
+}
+
 html,
 body {
 	margin: 0;
