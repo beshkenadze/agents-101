@@ -1,0 +1,61 @@
+{
+  "schema_version": 2,
+  "diagram_type": "workflow",
+  "meta": {
+    "title": "Workflow",
+    "output": "workflow-mini.html",
+    "quality_profile": "showcase",
+    "legend": {
+      "mode": "hidden"
+    }
+  },
+  "lanes": [
+    {
+      "id": "code",
+      "label": "You wire the steps"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "a",
+      "lane": "code",
+      "col": 0,
+      "type": "backend",
+      "label": "Step 01",
+      "width": 110
+    },
+    {
+      "id": "b",
+      "lane": "code",
+      "col": 1,
+      "type": "backend",
+      "label": "Step 02",
+      "width": 110
+    },
+    {
+      "id": "c",
+      "lane": "code",
+      "col": 2,
+      "type": "backend",
+      "label": "Step 03",
+      "width": 110
+    }
+  ],
+  "edges": [
+    {
+      "id": "ab",
+      "from": "a",
+      "to": "b"
+    },
+    {
+      "id": "bc",
+      "from": "b",
+      "to": "c"
+    }
+  ],
+  "mainPath": [
+    "a",
+    "b",
+    "c"
+  ]
+}

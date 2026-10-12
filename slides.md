@@ -104,7 +104,7 @@ status: "§ completion"
 import { generateText } from "ai"
 
 const { text } = await generateText({
-  model:  openai("gpt-5"),
+  model:  openai("gpt-6-sol"),
   prompt: "Rewrite my work experience nicely.",
 })
 
@@ -116,7 +116,7 @@ const { text } = await generateText({
 <!--
 Let's start with the simplest thing. Completion is one call. You send a prompt, you get text back. That's the atomic unit of everything today.
 
-Here is the AI SDK version. We call generateText. We pass a model — gpt-5 here — and a prompt: "rewrite my work experience nicely". We get a string back.
+Here is the AI SDK version. We call generateText. We pass a model — gpt-6-sol here — and a prompt: "rewrite my work experience nicely". We get a string back.
 
 That is fine for a chat reply. But if the next step is code — building a CV object with fields — a free string is the wrong shape. You would have to parse it. Parsing LLM text is a losing game. We will fix that in two slides with structured output.
 -->
@@ -134,9 +134,7 @@ status: "§ workflow"
 
 <div class="two-ascii-trade">
 <div>
-<pre class="ascii" style="font-size: 26px; line-height: 1.6;"><b>step 01</b>  <em>→</em>  extract skills
-<b>step 02</b>  <em>→</em>  format experience
-<b>step 03</b>  <em>→</em>  compose final object</pre>
+<img class="diagram" src="/diagrams/completion-workflow.svg" alt="Workflow: extract skills, format experience, compose the final object" style="margin-top: 8px;" />
 <p class="body" style="margin-top: 40px; font-size: 22px;">Steps known in advance. You wire them. The model fills the blanks.</p>
 </div>
 <div class="trade" style="margin-top: 10px;">
@@ -175,15 +173,8 @@ status: "§ agent loop"
 <h2 class="heading" style="font-size: 76px;">When steps aren't<br/>known up front.</h2>
 
 <div class="two-ascii-lead">
-<pre class="ascii" style="font-size: 28px; line-height: 1.7;">  ┌──────────┐
-  │  model   │ ◀──┐
-  └────┬─────┘    │
-       │ picks    │
-       ▼          │
-  ┌──────────┐    │
-  │  tool    │ ───┘ <em>loop</em>
-  └──────────┘
-<span class="warn" style="display:block; margin-top:1.2em;">  same model + tools + loop</span></pre>
+<div><img class="diagram" src="/diagrams/agent-loop.svg" alt="Agent loop: the model calls a tool, gets the result back, and repeats until it can answer" />
+<span style="display:block; margin-top:0.8em; font-size: 24px; color: var(--warn);">same model + tools + loop</span></div>
 <div>
 <p class="lead" style="max-width: 32ch; font-size: 32px;">The model chooses which function to call, inspects the result, and decides what to do next.</p>
 <p class="body" style="margin-top: 20px;" v-click>It can recover from errors, ask for missing info, and handle scenarios you didn't plan for.</p>
@@ -260,7 +251,7 @@ layout: split
 
 ```ts
 const { output } = await generateText({
-  model:  openai("gpt-5"),
+  model:  openai("gpt-6-sol"),
   output: Output.object({
     schema: z.object({
       name:   z.string(),
@@ -281,7 +272,7 @@ const { output } = await generateText({
 <p class="body" style="margin-top: 16px;" v-click>Works in workflows, in validation, inside agents — anywhere you need a predictable output shape.</p>
 
 <div class="warn-note" v-click>
-<strong>// heads up:</strong> models occasionally break JSON. Strict mode helps where the provider supports it. Otherwise plug in a fixer, or re-send to a cheap model (nano / mini) for repair.
+<strong>// heads up:</strong> models occasionally break JSON. Strict mode helps where the provider supports it. Otherwise plug in a fixer, or re-send to a cheap model (e.g. gpt-6-luna) for repair.
 </div>
 
 <!--
@@ -291,7 +282,7 @@ When a model replies with free text, it is fine for chat. Useless for code. Your
 
 [click] This works everywhere. Inside a workflow step. As a validation pass. Inside an agent tool. Anywhere you need a predictable output shape. In our demo, the same pattern is used three times — workflow extract step, agent extractMetadata tool, and memory schema. One Zod schema, three call sites.
 
-[click] One honest gotcha: models still break JSON sometimes. Long outputs. Deep nesting. Edge cases. Some providers have a strict mode that guarantees valid JSON for the schema — use it when you can. When you can't, the standard fix is a repair pass. Either plug in a JSON fixer library, or send the broken output to a cheap model — gpt-5-nano or gpt-5-mini — whose only job is "parse this mess, return valid JSON". Two-stage repair. Boring and reliable.
+[click] One honest gotcha: models still break JSON sometimes. Long outputs. Deep nesting. Edge cases. Some providers have a strict mode that guarantees valid JSON for the schema — use it when you can. When you can't, the standard fix is a repair pass. Either plug in a JSON fixer library, or send the broken output to a cheap model — like gpt-6-luna — whose only job is "parse this mess, return valid JSON". Two-stage repair. Boring and reliable.
 -->
 
 ---
@@ -305,14 +296,7 @@ status: "§ bridge"
 
 <h2 class="heading" style="font-size: 68px;">A tool call is<br/>structured output + execute.</h2>
 
-<pre class="ascii" style="font-size: 22px; line-height: 1.7; margin-top: 24px;">  <span style="color: var(--fg-dim);">model reply (structured):</span>
-    { "tool": "extractMetadata", "args": { "text": "I'm Aleksandr..." } }
-                            <em>│</em>
-                            <em>▼</em>
-  <span style="color: var(--fg-dim);">runtime executes:</span>  extractMetadata({ text: "I'm Aleksandr..." })
-                            <em>│</em>
-                            <em>▼</em>
-  <span style="color: var(--fg-dim);">result →</span>  next model call</pre>
+<img class="diagram" src="/diagrams/tool-call.svg" alt="The model returns tool name and arguments; your code runs the tool and sends the result back" style="margin-top: 24px;" />
 
 <p class="body" style="margin-top: 32px; font-size: 24px;" v-click>The model doesn't <em style="color: var(--accent); font-style: normal;">call</em> anything — it <strong>asks</strong> in JSON. Your code calls.</p>
 
@@ -354,7 +338,7 @@ export const extractMetadata = createTool({
   outputSchema: DraftCVSchema,
   execute: async ({ text }) => {
     const { output } = await generateText({
-      model:  openai("gpt-5-nano"), // cheap — structured extraction
+      model:  openai("gpt-6-luna"), // cheap — structured extraction
       output: Output.object({ schema: DraftCVSchema }),
       prompt: `Extract from: ${text}`,
     })
@@ -410,9 +394,7 @@ status: "§ choose wisely"
 <li>Cheaper · easier to debug</li>
 <li>Human-in-the-loop can emulate agent-like behaviour</li>
 </ul>
-<pre class="ascii" style="margin-top: auto; padding-top: 28px; font-size: 20px; color: var(--fg-dim);">  ┌──┐   ┌──┐   ┌──┐
-  │01│ → │02│ → │03│
-  └──┘   └──┘   └──┘</pre>
+<img class="diagram" src="/diagrams/workflow-mini.svg" alt="Three fixed steps wired by you" style="margin-top: auto; padding-top: 28px;" />
 </div>
 <div class="col pill-accent" v-click>
 <span class="col-label">agent</span>
@@ -422,10 +404,7 @@ status: "§ choose wisely"
 <li>Asks for data it doesn't have</li>
 <li class="minus">May drift, ignore prompt rules</li>
 </ul>
-<pre class="ascii" style="margin-top: auto; padding-top: 28px; font-size: 20px;">       ┌──────┐
-  goal→│ loop │→ tools
-       └──┬───┘
-          └──── self-decides</pre>
+<img class="diagram" src="/diagrams/agent-mini.svg" alt="A goal goes into a loop that calls tools and gets results back" style="margin-top: auto; padding-top: 28px;" />
 </div>
 </div>
 
@@ -455,36 +434,19 @@ status: "§ orchestration"
 <span class="idx">01 · supervisor</span>
 <h4>Supervisor</h4>
 <p>One lead agent breaks the task down and dispatches to specialists.</p>
-<pre class="ascii" style="margin-top: auto; padding-top: 16px; font-size: 18px; color: var(--fg-dim);">       ┌───────┐
-       │ lead  │
-       └─┬───┬─┘
-        ▼    ▼
-      ┌──┐  ┌──┐
-      │A │  │B │
-      └──┘  └──┘</pre>
+<img class="diagram" src="/diagrams/supervisor.svg" alt="A lead agent sends tasks to agents A and B" style="margin-top: auto; padding-top: 16px;" />
 </div>
 <div class="card">
 <span class="idx">02 · swarm</span>
 <h4>Swarm</h4>
 <p>No boss. Agents pass control to each other — "this part is yours".</p>
-<pre class="ascii" style="margin-top: auto; padding-top: 16px; font-size: 18px; color: var(--fg-dim);">
-  ┌──┐  ⇄  ┌──┐
-  │A │     │B │
-  └──┘     └──┘
-     ⇅     ⇅
-      ┌──┐
-      │C │
-      └──┘</pre>
+<img class="diagram" src="/diagrams/swarm.svg" alt="Agents A, B and C hand control to each other" style="margin-top: auto; padding-top: 16px;" />
 </div>
 <div class="card">
 <span class="idx">03 · router</span>
 <h4>Router</h4>
 <p>Reads the request, hands it to the right specialist. Doesn't execute.</p>
-<pre class="ascii" style="margin-top: auto; padding-top: 16px; font-size: 18px; color: var(--fg-dim);">       ┌────────┐
-  req→ │ router │
-       └──┬──┬──┘
-          ▼  ▼
-        code  text</pre>
+<img class="diagram" src="/diagrams/router.svg" alt="A router sends the request to a code agent or a text agent" style="margin-top: auto; padding-top: 16px;" />
 </div>
 </div>
 
@@ -535,9 +497,7 @@ status: "§ two backends"
 
 <h2 class="heading" style="font-size: 64px;">One chat,<br/>two backends.</h2>
 
-<pre class="ascii" style="font-size: 22px; line-height: 1.8; margin-top: 24px;">                         <span style="color: var(--accent);">A · workflow</span>  <em>→</em>  step · step · branch    <em>─┐</em>
-  free-form chat  <em>──┤</em>                                              <em>├──▶</em>  { name, headline, skills, jobs }
-                         <span style="color: var(--accent);">B · agent</span>     <em>→</em>  tools + loop + memory   <em>─┘</em></pre>
+<img class="diagram" src="/diagrams/demo-architecture.svg" alt="Chat UI posts to one API route, which runs either the workflow or the agent; both return the same CV object" style="margin-top: 24px;" />
 
 <div class="tag-row" style="margin-top: 32px;">
 <span class="tag" v-click="1"><span class="dot-s"></span>UI doesn't know which backend ran</span>
@@ -610,7 +570,7 @@ status: "backend · workflow"
 
 ```ts
 export const cvWorkflow = createWorkflow({ id: "cv-workflow", inputSchema })
-  .then(extract)    // 1 × Output.object → DraftCVSchema · gpt-5-nano
+  .then(extract)    // 1 × Output.object → DraftCVSchema · gpt-6-luna
   .then(merge)      // plain code — keep fields already filled
   .then(validate)   // CVSchema.safeParse → { valid, issue }
   .branch([
@@ -622,7 +582,7 @@ export const cvWorkflow = createWorkflow({ id: "cv-workflow", inputSchema })
 
 <div class="tag-row">
 <span class="tag" v-click="1"><span class="dot-s"></span>one LLM call per turn</span>
-<span class="tag" v-click="2"><span class="dot-s"></span>cheap — nano for extraction</span>
+<span class="tag" v-click="2"><span class="dot-s"></span>cheap — luna for extraction</span>
 <span class="tag" v-click="3"><span class="dot-s"></span>branch is code, not the model</span>
 </div>
 
@@ -631,7 +591,7 @@ Backend A — workflow. Let me walk through the code first, then we switch to th
 
 Four named steps. We wire them with Mastra's createWorkflow. The chain: extract, merge, validate, branch.
 
-Extract is the only LLM call in the whole flow. One structured-output call on gpt-5-nano — the exact same extractDraft function the agent's tool uses. Cheap. Fast. Non-reasoning. Returns a partial DraftCV — only the fields it could infer from the text.
+Extract is the only LLM call in the whole flow. One structured-output call on gpt-6-luna — the exact same extractDraft function the agent's tool uses. Cheap. Fast. Reasoning turned off. Returns a partial DraftCV — only the fields it could infer from the text.
 
 Merge is pure code. No model. New fields fill empty slots. Already-filled fields are never wiped. That is how state grows across turns.
 
@@ -641,7 +601,7 @@ Then branch. This is Mastra's .branch() primitive. The predicate is a boolean we
 
 [click] So per turn — one LLM call only. Everything else is code.
 
-[click] gpt-5-nano is the point here. Mechanical extraction is exactly where cheap models shine. No reasoning needed, just "pull fields out of this text". Using gpt-5 here would cost 10x more with no measurable gain.
+[click] gpt-6-luna is the point here. It is the smallest and cheapest model in the family. Mechanical extraction is exactly where cheap models shine. No reasoning needed, just "pull fields out of this text" — so we even switch reasoning off. A big model here would cost many times more with no measurable gain.
 
 [click] The branch is ours. We own every path. Nothing surprises you.
 
@@ -651,7 +611,7 @@ In the chat, check that the toggle says "workflow". Start a new thread. Paste a 
 
 Watch the numbered step blocks appear in order.
 
-Extract — point at it: "one LLM call, gpt-5-nano, returns a DraftCV".
+Extract — point at it: "one LLM call, gpt-6-luna, returns a DraftCV".
 Merge — "pure code, keeping the fields we already have".
 Validate — "Zod safeParse, fails because company is missing".
 ask-field — "code branch picked the question".
@@ -679,7 +639,7 @@ status: "backend · agent"
 ```ts
 export const cvAgent = new Agent({
   id:    "cv-agent",
-  model: "openai/gpt-5-mini",
+  model: "openai/gpt-6-sol",
   instructions: `
     You are a CV-building agent. Extract → validate → confirm → generate.
     Never invent facts. Never call generatePdf without explicit approval.`,

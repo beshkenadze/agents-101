@@ -1,0 +1,76 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Supervisor",
+    "output": "supervisor.html",
+    "quality_profile": "showcase",
+    "legend": {
+      "mode": "hidden"
+    }
+  },
+  "components": [
+    {
+      "id": "lead",
+      "type": "backend",
+      "label": "Lead agent",
+      "sublabel": "splits the task",
+      "pos": [
+        150,
+        40
+      ],
+      "size": [
+        160,
+        62
+      ]
+    },
+    {
+      "id": "a",
+      "type": "backend",
+      "label": "Agent A",
+      "sublabel": "research",
+      "pos": [
+        40,
+        220
+      ],
+      "size": [
+        140,
+        62
+      ]
+    },
+    {
+      "id": "b",
+      "type": "backend",
+      "label": "Agent B",
+      "sublabel": "writing",
+      "pos": [
+        280,
+        220
+      ],
+      "size": [
+        140,
+        62
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "ta",
+      "from": "lead",
+      "to": "a",
+      "label": "task",
+      "variant": "emphasis",
+      "fromSide": "bottom",
+      "toSide": "top"
+    },
+    {
+      "id": "tb",
+      "from": "lead",
+      "to": "b",
+      "label": "task",
+      "variant": "emphasis",
+      "fromSide": "bottom",
+      "toSide": "top"
+    }
+  ]
+}

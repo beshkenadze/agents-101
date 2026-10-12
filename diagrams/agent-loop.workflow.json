@@ -1,0 +1,99 @@
+{
+  "schema_version": 2,
+  "diagram_type": "workflow",
+  "meta": {
+    "title": "Agent loop",
+    "output": "agent-loop.html",
+    "quality_profile": "showcase",
+    "legend": {
+      "mode": "hidden"
+    }
+  },
+  "lanes": [
+    {
+      "id": "out",
+      "label": "Exit"
+    },
+    {
+      "id": "loop",
+      "label": "Agent loop"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "answer",
+      "lane": "out",
+      "col": 1,
+      "type": "frontend",
+      "label": "Answer",
+      "sublabel": "when the task is done",
+      "width": 170
+    },
+    {
+      "id": "goal",
+      "lane": "loop",
+      "col": 0,
+      "type": "external",
+      "label": "Goal",
+      "sublabel": "user message",
+      "width": 132
+    },
+    {
+      "id": "model",
+      "lane": "loop",
+      "col": 1,
+      "type": "backend",
+      "label": "Model",
+      "sublabel": "picks the next step",
+      "width": 170
+    },
+    {
+      "id": "tool",
+      "lane": "loop",
+      "col": 2,
+      "type": "messagebus",
+      "label": "Tool",
+      "sublabel": "your code runs it",
+      "width": 160
+    }
+  ],
+  "edges": [
+    {
+      "id": "start",
+      "from": "goal",
+      "to": "model"
+    },
+    {
+      "id": "call",
+      "from": "model",
+      "to": "tool",
+      "label": "call tool",
+      "variant": "emphasis"
+    },
+    {
+      "id": "result",
+      "from": "tool",
+      "to": "model",
+      "label": "result",
+      "variant": "dashed",
+      "role": "return",
+      "route": "bottom-channel",
+      "fromSide": "bottom",
+      "toSide": "bottom"
+    },
+    {
+      "id": "done",
+      "from": "model",
+      "to": "answer",
+      "label": "done",
+      "role": "branch",
+      "fromSide": "top",
+      "toSide": "bottom"
+    }
+  ],
+  "mainPath": [
+    "goal",
+    "model",
+    "tool"
+  ]
+}

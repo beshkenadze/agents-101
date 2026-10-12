@@ -182,8 +182,8 @@ export default function ChatPage() {
 
 						<div className="chat" ref={chatRef}>
 							<SystemLine role="// init">
-								session started · model: gpt-5-mini · tools: extractSkills,
-								formatExperience, generatePdf, webSearch
+								session started · model: gpt-6-sol · tools: extractMetadata,
+								validateCV, askConfirmation, webSearch, generatePdf
 							</SystemLine>
 							<AssistantLine>
 								Hey. Tell me about your work — skills, jobs, years — in plain

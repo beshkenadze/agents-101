@@ -1,0 +1,95 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Router",
+    "output": "router.html",
+    "quality_profile": "showcase",
+    "legend": {
+      "mode": "hidden"
+    }
+  },
+  "components": [
+    {
+      "id": "req",
+      "type": "external",
+      "label": "Request",
+      "sublabel": "user message",
+      "pos": [
+        160,
+        40
+      ],
+      "size": [
+        140,
+        62
+      ]
+    },
+    {
+      "id": "router",
+      "type": "backend",
+      "label": "Router",
+      "sublabel": "routes only",
+      "pos": [
+        160,
+        180
+      ],
+      "size": [
+        140,
+        62
+      ]
+    },
+    {
+      "id": "code",
+      "type": "backend",
+      "label": "Code agent",
+      "pos": [
+        40,
+        330
+      ],
+      "size": [
+        140,
+        62
+      ]
+    },
+    {
+      "id": "text",
+      "type": "backend",
+      "label": "Text agent",
+      "pos": [
+        280,
+        330
+      ],
+      "size": [
+        140,
+        62
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "in",
+      "from": "req",
+      "to": "router",
+      "fromSide": "bottom",
+      "toSide": "top"
+    },
+    {
+      "id": "tc",
+      "from": "router",
+      "to": "code",
+      "label": "code",
+      "variant": "emphasis",
+      "fromSide": "bottom",
+      "toSide": "top"
+    },
+    {
+      "id": "tt",
+      "from": "router",
+      "to": "text",
+      "label": "text",
+      "variant": "emphasis",
+      "fromSide": "bottom",
+      "toSide": "top"
+    }
+  ]
+}
