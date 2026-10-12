@@ -793,7 +793,7 @@ status: "§ agent picks UI"
 layout: split
 ---
 
-<div class="kicker">one minute on the UI — this is React Helsinki</div>
+<div class="kicker">one minute on the UI — this is HelsinkiJS</div>
 
 <h2 class="heading" style="font-size: 60px;">Agent speaks JSON.<br/>React renders.</h2>
 
@@ -836,7 +836,7 @@ outputSchema: z.object({
 <p class="body" style="margin-top: 24px;" v-click="4"><span style="color: var(--accent)">One Zod schema, four call-sites.</span> extract · memory · validate · render.</p>
 
 <!--
-Since this is React Helsinki — one minute on the UI side.
+Since this is HelsinkiJS — one minute on the frontend side.
 
 The CV card and the Yes/No card you saw in the demo — both rendered via json-render. No innerHTML. No raw HTML from the model.
 
