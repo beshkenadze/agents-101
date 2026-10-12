@@ -404,3 +404,15 @@ pre.ascii .warn, .ascii .warn { color: var(--warn); }
   letter-spacing: 0.2em;
   text-transform: uppercase;
 }
+
+/* ─── archify diagrams (public/diagrams, sources in diagrams/) ─── */
+.slidev-layout img.diagram {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 560px;
+  object-fit: contain;
+  object-position: left center;
+}
+.slidev-layout .card img.diagram { max-height: 440px; object-position: center bottom; }
+.slidev-layout .col img.diagram { max-height: 220px; }

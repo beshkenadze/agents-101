@@ -1,0 +1,85 @@
+{
+  "schema_version": 1,
+  "diagram_type": "sequence",
+  "meta": {
+    "title": "A tool call is structured output",
+    "output": "tool-call.html",
+    "quality_profile": "showcase",
+    "legend": {
+      "mode": "hidden"
+    },
+    "viewBox": [
+      880,
+      480
+    ],
+    "column_fit": "spread"
+  },
+  "participants": [
+    {
+      "id": "model",
+      "type": "backend",
+      "label": "Model",
+      "sublabel": "predicts JSON"
+    },
+    {
+      "id": "code",
+      "type": "frontend",
+      "label": "Your code",
+      "sublabel": "agent runtime"
+    },
+    {
+      "id": "tool",
+      "type": "messagebus",
+      "label": "extractMetadata",
+      "sublabel": "execute()"
+    }
+  ],
+  "messages": [
+    {
+      "id": "ask",
+      "from": "model",
+      "to": "code",
+      "y": 180,
+      "label": "{ tool, args }",
+      "variant": "emphasis"
+    },
+    {
+      "id": "run",
+      "from": "code",
+      "to": "tool",
+      "y": 225,
+      "label": "execute({ text })",
+      "variant": "default"
+    },
+    {
+      "id": "res",
+      "from": "tool",
+      "to": "code",
+      "y": 270,
+      "label": "DraftCV",
+      "variant": "return"
+    },
+    {
+      "id": "next",
+      "from": "code",
+      "to": "model",
+      "y": 315,
+      "label": "tool result \u2192 next call",
+      "variant": "return"
+    }
+  ],
+  "activations": [
+    {
+      "participant": "code",
+      "from": 175,
+      "to": 322,
+      "type": "frontend"
+    },
+    {
+      "participant": "tool",
+      "from": 220,
+      "to": 276,
+      "type": "messagebus"
+    }
+  ]
+}

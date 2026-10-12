@@ -1,0 +1,124 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "CV generator: one chat, two backends",
+    "output": "demo-architecture.html",
+    "quality_profile": "showcase",
+    "legend": {
+      "mode": "hidden"
+    }
+  },
+  "components": [
+    {
+      "id": "chat",
+      "type": "frontend",
+      "label": "Chat UI",
+      "sublabel": "useChat",
+      "pos": [
+        40,
+        200
+      ],
+      "size": [
+        140,
+        64
+      ]
+    },
+    {
+      "id": "route",
+      "type": "backend",
+      "label": "/api/chat",
+      "sublabel": "backend flag",
+      "pos": [
+        260,
+        200
+      ],
+      "size": [
+        150,
+        64
+      ]
+    },
+    {
+      "id": "wf",
+      "type": "backend",
+      "label": "A \u00b7 Workflow",
+      "sublabel": "extract \u2192 merge \u2192 validate",
+      "pos": [
+        500,
+        70
+      ],
+      "size": [
+        210,
+        64
+      ]
+    },
+    {
+      "id": "agent",
+      "type": "backend",
+      "label": "B \u00b7 Agent",
+      "sublabel": "tools + loop + memory",
+      "pos": [
+        500,
+        330
+      ],
+      "size": [
+        210,
+        64
+      ]
+    },
+    {
+      "id": "cv",
+      "type": "database",
+      "label": "CV object",
+      "sublabel": "same CVSchema",
+      "pos": [
+        800,
+        200
+      ],
+      "size": [
+        160,
+        64
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "post",
+      "from": "chat",
+      "to": "route",
+      "label": "POST"
+    },
+    {
+      "id": "towf",
+      "from": "route",
+      "to": "wf",
+      "label": "workflow",
+      "fromSide": "top",
+      "toSide": "left",
+      "variant": "emphasis"
+    },
+    {
+      "id": "toagent",
+      "from": "route",
+      "to": "agent",
+      "label": "agent",
+      "fromSide": "bottom",
+      "toSide": "left",
+      "variant": "emphasis"
+    },
+    {
+      "id": "wfcv",
+      "from": "wf",
+      "to": "cv",
+      "fromSide": "right",
+      "toSide": "top"
+    },
+    {
+      "id": "agentcv",
+      "from": "agent",
+      "to": "cv",
+      "fromSide": "right",
+      "toSide": "bottom"
+    }
+  ]
+}

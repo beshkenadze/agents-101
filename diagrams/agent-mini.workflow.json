@@ -1,0 +1,75 @@
+{
+  "schema_version": 2,
+  "diagram_type": "workflow",
+  "meta": {
+    "title": "Agent",
+    "output": "agent-mini.html",
+    "quality_profile": "showcase",
+    "legend": {
+      "mode": "hidden"
+    }
+  },
+  "lanes": [
+    {
+      "id": "loop",
+      "label": "The model decides"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "goal",
+      "lane": "loop",
+      "col": 0,
+      "type": "external",
+      "label": "Goal",
+      "width": 110
+    },
+    {
+      "id": "loop",
+      "lane": "loop",
+      "col": 1,
+      "type": "backend",
+      "label": "Loop",
+      "sublabel": "model",
+      "width": 120
+    },
+    {
+      "id": "tools",
+      "lane": "loop",
+      "col": 2,
+      "type": "messagebus",
+      "label": "Tools",
+      "width": 110
+    }
+  ],
+  "edges": [
+    {
+      "id": "g",
+      "from": "goal",
+      "to": "loop"
+    },
+    {
+      "id": "call",
+      "from": "loop",
+      "to": "tools",
+      "label": "call",
+      "variant": "emphasis"
+    },
+    {
+      "id": "back",
+      "from": "tools",
+      "to": "loop",
+      "label": "result",
+      "variant": "dashed",
+      "role": "return",
+      "route": "bottom-channel",
+      "fromSide": "bottom",
+      "toSide": "bottom"
+    }
+  ],
+  "mainPath": [
+    "goal",
+    "loop",
+    "tools"
+  ]
+}

@@ -134,9 +134,7 @@ status: "§ workflow"
 
 <div class="two-ascii-trade">
 <div>
-<pre class="ascii" style="font-size: 26px; line-height: 1.6;"><b>step 01</b>  <em>→</em>  extract skills
-<b>step 02</b>  <em>→</em>  format experience
-<b>step 03</b>  <em>→</em>  compose final object</pre>
+<img class="diagram" src="/diagrams/completion-workflow.svg" alt="Workflow: extract skills, format experience, compose the final object" style="margin-top: 8px;" />
 <p class="body" style="margin-top: 40px; font-size: 22px;">Steps known in advance. You wire them. The model fills the blanks.</p>
 </div>
 <div class="trade" style="margin-top: 10px;">
@@ -175,15 +173,8 @@ status: "§ agent loop"
 <h2 class="heading" style="font-size: 76px;">When steps aren't<br/>known up front.</h2>
 
 <div class="two-ascii-lead">
-<pre class="ascii" style="font-size: 28px; line-height: 1.7;">  ┌──────────┐
-  │  model   │ ◀──┐
-  └────┬─────┘    │
-       │ picks    │
-       ▼          │
-  ┌──────────┐    │
-  │  tool    │ ───┘ <em>loop</em>
-  └──────────┘
-<span class="warn" style="display:block; margin-top:1.2em;">  same model + tools + loop</span></pre>
+<div><img class="diagram" src="/diagrams/agent-loop.svg" alt="Agent loop: the model calls a tool, gets the result back, and repeats until it can answer" />
+<span style="display:block; margin-top:0.8em; font-size: 24px; color: var(--warn);">same model + tools + loop</span></div>
 <div>
 <p class="lead" style="max-width: 32ch; font-size: 32px;">The model chooses which function to call, inspects the result, and decides what to do next.</p>
 <p class="body" style="margin-top: 20px;" v-click>It can recover from errors, ask for missing info, and handle scenarios you didn't plan for.</p>
@@ -305,14 +296,7 @@ status: "§ bridge"
 
 <h2 class="heading" style="font-size: 68px;">A tool call is<br/>structured output + execute.</h2>
 
-<pre class="ascii" style="font-size: 22px; line-height: 1.7; margin-top: 24px;">  <span style="color: var(--fg-dim);">model reply (structured):</span>
-    { "tool": "extractMetadata", "args": { "text": "I'm Aleksandr..." } }
-                            <em>│</em>
-                            <em>▼</em>
-  <span style="color: var(--fg-dim);">runtime executes:</span>  extractMetadata({ text: "I'm Aleksandr..." })
-                            <em>│</em>
-                            <em>▼</em>
-  <span style="color: var(--fg-dim);">result →</span>  next model call</pre>
+<img class="diagram" src="/diagrams/tool-call.svg" alt="The model returns tool name and arguments; your code runs the tool and sends the result back" style="margin-top: 24px;" />
 
 <p class="body" style="margin-top: 32px; font-size: 24px;" v-click>The model doesn't <em style="color: var(--accent); font-style: normal;">call</em> anything — it <strong>asks</strong> in JSON. Your code calls.</p>
 
@@ -410,9 +394,7 @@ status: "§ choose wisely"
 <li>Cheaper · easier to debug</li>
 <li>Human-in-the-loop can emulate agent-like behaviour</li>
 </ul>
-<pre class="ascii" style="margin-top: auto; padding-top: 28px; font-size: 20px; color: var(--fg-dim);">  ┌──┐   ┌──┐   ┌──┐
-  │01│ → │02│ → │03│
-  └──┘   └──┘   └──┘</pre>
+<img class="diagram" src="/diagrams/workflow-mini.svg" alt="Three fixed steps wired by you" style="margin-top: auto; padding-top: 28px;" />
 </div>
 <div class="col pill-accent" v-click>
 <span class="col-label">agent</span>
@@ -422,10 +404,7 @@ status: "§ choose wisely"
 <li>Asks for data it doesn't have</li>
 <li class="minus">May drift, ignore prompt rules</li>
 </ul>
-<pre class="ascii" style="margin-top: auto; padding-top: 28px; font-size: 20px;">       ┌──────┐
-  goal→│ loop │→ tools
-       └──┬───┘
-          └──── self-decides</pre>
+<img class="diagram" src="/diagrams/agent-mini.svg" alt="A goal goes into a loop that calls tools and gets results back" style="margin-top: auto; padding-top: 28px;" />
 </div>
 </div>
 
@@ -455,36 +434,19 @@ status: "§ orchestration"
 <span class="idx">01 · supervisor</span>
 <h4>Supervisor</h4>
 <p>One lead agent breaks the task down and dispatches to specialists.</p>
-<pre class="ascii" style="margin-top: auto; padding-top: 16px; font-size: 18px; color: var(--fg-dim);">       ┌───────┐
-       │ lead  │
-       └─┬───┬─┘
-        ▼    ▼
-      ┌──┐  ┌──┐
-      │A │  │B │
-      └──┘  └──┘</pre>
+<img class="diagram" src="/diagrams/supervisor.svg" alt="A lead agent sends tasks to agents A and B" style="margin-top: auto; padding-top: 16px;" />
 </div>
 <div class="card">
 <span class="idx">02 · swarm</span>
 <h4>Swarm</h4>
 <p>No boss. Agents pass control to each other — "this part is yours".</p>
-<pre class="ascii" style="margin-top: auto; padding-top: 16px; font-size: 18px; color: var(--fg-dim);">
-  ┌──┐  ⇄  ┌──┐
-  │A │     │B │
-  └──┘     └──┘
-     ⇅     ⇅
-      ┌──┐
-      │C │
-      └──┘</pre>
+<img class="diagram" src="/diagrams/swarm.svg" alt="Agents A, B and C hand control to each other" style="margin-top: auto; padding-top: 16px;" />
 </div>
 <div class="card">
 <span class="idx">03 · router</span>
 <h4>Router</h4>
 <p>Reads the request, hands it to the right specialist. Doesn't execute.</p>
-<pre class="ascii" style="margin-top: auto; padding-top: 16px; font-size: 18px; color: var(--fg-dim);">       ┌────────┐
-  req→ │ router │
-       └──┬──┬──┘
-          ▼  ▼
-        code  text</pre>
+<img class="diagram" src="/diagrams/router.svg" alt="A router sends the request to a code agent or a text agent" style="margin-top: auto; padding-top: 16px;" />
 </div>
 </div>
 
@@ -535,9 +497,7 @@ status: "§ two backends"
 
 <h2 class="heading" style="font-size: 64px;">One chat,<br/>two backends.</h2>
 
-<pre class="ascii" style="font-size: 22px; line-height: 1.8; margin-top: 24px;">                         <span style="color: var(--accent);">A · workflow</span>  <em>→</em>  step · step · branch    <em>─┐</em>
-  free-form chat  <em>──┤</em>                                              <em>├──▶</em>  { name, headline, skills, jobs }
-                         <span style="color: var(--accent);">B · agent</span>     <em>→</em>  tools + loop + memory   <em>─┘</em></pre>
+<img class="diagram" src="/diagrams/demo-architecture.svg" alt="Chat UI posts to one API route, which runs either the workflow or the agent; both return the same CV object" style="margin-top: 24px;" />
 
 <div class="tag-row" style="margin-top: 32px;">
 <span class="tag" v-click="1"><span class="dot-s"></span>UI doesn't know which backend ran</span>

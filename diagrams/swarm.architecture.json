@@ -1,0 +1,83 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Swarm",
+    "output": "swarm.html",
+    "quality_profile": "showcase",
+    "legend": {
+      "mode": "hidden"
+    }
+  },
+  "components": [
+    {
+      "id": "a",
+      "type": "backend",
+      "label": "Agent A",
+      "sublabel": "triage",
+      "pos": [
+        40,
+        40
+      ],
+      "size": [
+        140,
+        62
+      ]
+    },
+    {
+      "id": "b",
+      "type": "backend",
+      "label": "Agent B",
+      "sublabel": "billing",
+      "pos": [
+        320,
+        40
+      ],
+      "size": [
+        140,
+        62
+      ]
+    },
+    {
+      "id": "c",
+      "type": "backend",
+      "label": "Agent C",
+      "sublabel": "tech support",
+      "pos": [
+        180,
+        230
+      ],
+      "size": [
+        140,
+        62
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "ab",
+      "from": "a",
+      "to": "b",
+      "label": "hand off",
+      "variant": "emphasis"
+    },
+    {
+      "id": "bc",
+      "from": "b",
+      "to": "c",
+      "label": "hand off",
+      "variant": "emphasis",
+      "fromSide": "bottom",
+      "toSide": "right"
+    },
+    {
+      "id": "ca",
+      "from": "c",
+      "to": "a",
+      "label": "hand off",
+      "variant": "emphasis",
+      "fromSide": "left",
+      "toSide": "bottom"
+    }
+  ]
+}
