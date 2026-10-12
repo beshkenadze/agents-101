@@ -13,14 +13,7 @@ export const generatePdf = createTool({
 		url: z.string().describe("Path under /cvs/... served by Next"),
 		bytes: z.number().describe("Size of the generated PDF in bytes"),
 	}),
-	execute: async (rawInput: unknown) => {
-		const input =
-			rawInput &&
-			typeof rawInput === "object" &&
-			"context" in rawInput
-				? (rawInput as { context: unknown }).context
-				: rawInput;
-		const cv = CVSchema.parse(input);
+	execute: async (cv) => {
 		const { url, bytes } = await renderCVtoPdf(cv);
 		return { name: cv.name, url, bytes };
 	},

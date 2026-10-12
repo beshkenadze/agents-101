@@ -2,6 +2,9 @@ import { createTool } from "@mastra/core/tools";
 import { z } from "zod";
 import { CVSchema, DraftCVSchema } from "@/lib/schemas";
 
+// Deterministic guardrail: plain Zod validation, no LLM involved.
+// The agent can't talk its way past this check — the PDF tool only accepts
+// a CV that passes CVSchema.
 export const validateCV = createTool({
 	id: "validate-cv",
 	description:
@@ -20,13 +23,8 @@ export const validateCV = createTool({
 			issues: z.array(z.string()),
 		}),
 	]),
-	execute: async (input: unknown) => {
-		const data =
-			input && typeof input === "object" && "context" in input
-				? (input as { context: unknown }).context
-				: input;
-
-		const result = CVSchema.safeParse(data);
+	execute: async (draft) => {
+		const result = CVSchema.safeParse(draft);
 		if (result.success) {
 			return {
 				valid: true as const,

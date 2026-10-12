@@ -1,11 +1,8 @@
-import { openai } from "@ai-sdk/openai";
 import { createStep, createWorkflow } from "@mastra/core/workflows";
-import { generateObject } from "ai";
 import { z } from "zod";
 import { mergeDraft } from "@/lib/backends/merge-draft";
+import { extractDraft } from "@/lib/extract";
 import { CVSchema, DraftCVSchema } from "@/lib/schemas";
-
-const extractor = openai("gpt-5-nano");
 
 const inputSchema = z.object({
 	userText: z.string(),
@@ -25,26 +22,18 @@ const resultSchema = z.object({
 	question: z.string().nullable(),
 });
 
+export type CVWorkflowResult = z.infer<typeof resultSchema>;
+
 // ─── Steps ───────────────────────────────────────────────────
 
 const extractStep = createStep({
 	id: "extract",
 	inputSchema,
 	outputSchema: inputSchema.extend({ extracted: DraftCVSchema }),
-	execute: async ({ inputData }) => {
-		const { object } = await generateObject({
-			model: extractor,
-			schema: DraftCVSchema,
-			prompt: [
-				"Extract CV fields from the message below.",
-				"Omit any field you cannot infer. Never invent names, companies, or dates.",
-				"",
-				"Message:",
-				inputData.userText,
-			].join("\n"),
-		});
-		return { ...inputData, extracted: object };
-	},
+	execute: async ({ inputData }) => ({
+		...inputData,
+		extracted: await extractDraft(inputData.userText),
+	}),
 });
 
 const mergeStep = createStep({
@@ -99,6 +88,9 @@ const readyStep = createStep({
 });
 
 // ─── Workflow ─────────────────────────────────────────────────
+// The developer fixes the order: extract → merge → validate → ask | ready.
+// Missing data is handled by human-in-the-loop: the workflow asks one
+// pre-written question per turn and stops.
 
 export const cvWorkflow = createWorkflow({
 	id: "cv-workflow",
