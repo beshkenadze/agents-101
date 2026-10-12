@@ -2,8 +2,8 @@ import { openai } from "@ai-sdk/openai";
 import { generateText, Output } from "ai";
 import { type DraftCV, DraftCVSchema } from "@/lib/schemas";
 
-// Mechanical extraction — cheap, fast, non-reasoning model.
-const extractorModel = openai("gpt-5-nano");
+// Mechanical extraction — the cheapest, fastest model, with reasoning off.
+const extractorModel = openai("gpt-6-luna");
 
 // One structured-output call shared by both backends:
 // - the workflow calls it as a fixed step,
@@ -12,6 +12,7 @@ export async function extractDraft(text: string): Promise<DraftCV> {
 	const { output } = await generateText({
 		model: extractorModel,
 		output: Output.object({ schema: DraftCVSchema }),
+		providerOptions: { openai: { reasoningEffort: "none" } },
 		prompt: [
 			"Extract CV fields from the message below.",
 			"Use null for any field you cannot infer — never invent a name, company, role, or dates.",

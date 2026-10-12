@@ -281,7 +281,7 @@ const { output } = await generateText({
 <p class="body" style="margin-top: 16px;" v-click>Works in workflows, in validation, inside agents — anywhere you need a predictable output shape.</p>
 
 <div class="warn-note" v-click>
-<strong>// heads up:</strong> models occasionally break JSON. Strict mode helps where the provider supports it. Otherwise plug in a fixer, or re-send to a cheap model (nano / mini) for repair.
+<strong>// heads up:</strong> models occasionally break JSON. Strict mode helps where the provider supports it. Otherwise plug in a fixer, or re-send to a cheap model (e.g. gpt-6-luna) for repair.
 </div>
 
 <!--
@@ -291,7 +291,7 @@ When a model replies with free text, it is fine for chat. Useless for code. Your
 
 [click] This works everywhere. Inside a workflow step. As a validation pass. Inside an agent tool. Anywhere you need a predictable output shape. In our demo, the same pattern is used three times — workflow extract step, agent extractMetadata tool, and memory schema. One Zod schema, three call sites.
 
-[click] One honest gotcha: models still break JSON sometimes. Long outputs. Deep nesting. Edge cases. Some providers have a strict mode that guarantees valid JSON for the schema — use it when you can. When you can't, the standard fix is a repair pass. Either plug in a JSON fixer library, or send the broken output to a cheap model — gpt-5-nano or gpt-5-mini — whose only job is "parse this mess, return valid JSON". Two-stage repair. Boring and reliable.
+[click] One honest gotcha: models still break JSON sometimes. Long outputs. Deep nesting. Edge cases. Some providers have a strict mode that guarantees valid JSON for the schema — use it when you can. When you can't, the standard fix is a repair pass. Either plug in a JSON fixer library, or send the broken output to a cheap model — like gpt-6-luna — whose only job is "parse this mess, return valid JSON". Two-stage repair. Boring and reliable.
 -->
 
 ---
@@ -354,7 +354,7 @@ export const extractMetadata = createTool({
   outputSchema: DraftCVSchema,
   execute: async ({ text }) => {
     const { output } = await generateText({
-      model:  openai("gpt-5-nano"), // cheap — structured extraction
+      model:  openai("gpt-6-luna"), // cheap — structured extraction
       output: Output.object({ schema: DraftCVSchema }),
       prompt: `Extract from: ${text}`,
     })
@@ -610,7 +610,7 @@ status: "backend · workflow"
 
 ```ts
 export const cvWorkflow = createWorkflow({ id: "cv-workflow", inputSchema })
-  .then(extract)    // 1 × Output.object → DraftCVSchema · gpt-5-nano
+  .then(extract)    // 1 × Output.object → DraftCVSchema · gpt-6-luna
   .then(merge)      // plain code — keep fields already filled
   .then(validate)   // CVSchema.safeParse → { valid, issue }
   .branch([
@@ -622,7 +622,7 @@ export const cvWorkflow = createWorkflow({ id: "cv-workflow", inputSchema })
 
 <div class="tag-row">
 <span class="tag" v-click="1"><span class="dot-s"></span>one LLM call per turn</span>
-<span class="tag" v-click="2"><span class="dot-s"></span>cheap — nano for extraction</span>
+<span class="tag" v-click="2"><span class="dot-s"></span>cheap — luna for extraction</span>
 <span class="tag" v-click="3"><span class="dot-s"></span>branch is code, not the model</span>
 </div>
 
@@ -631,7 +631,7 @@ Backend A — workflow. Let me walk through the code first, then we switch to th
 
 Four named steps. We wire them with Mastra's createWorkflow. The chain: extract, merge, validate, branch.
 
-Extract is the only LLM call in the whole flow. One structured-output call on gpt-5-nano — the exact same extractDraft function the agent's tool uses. Cheap. Fast. Non-reasoning. Returns a partial DraftCV — only the fields it could infer from the text.
+Extract is the only LLM call in the whole flow. One structured-output call on gpt-6-luna — the exact same extractDraft function the agent's tool uses. Cheap. Fast. Reasoning turned off. Returns a partial DraftCV — only the fields it could infer from the text.
 
 Merge is pure code. No model. New fields fill empty slots. Already-filled fields are never wiped. That is how state grows across turns.
 
@@ -641,7 +641,7 @@ Then branch. This is Mastra's .branch() primitive. The predicate is a boolean we
 
 [click] So per turn — one LLM call only. Everything else is code.
 
-[click] gpt-5-nano is the point here. Mechanical extraction is exactly where cheap models shine. No reasoning needed, just "pull fields out of this text". Using gpt-5 here would cost 10x more with no measurable gain.
+[click] gpt-6-luna is the point here. It is the smallest and cheapest model in the family. Mechanical extraction is exactly where cheap models shine. No reasoning needed, just "pull fields out of this text" — so we even switch reasoning off. A big model here would cost many times more with no measurable gain.
 
 [click] The branch is ours. We own every path. Nothing surprises you.
 
@@ -651,7 +651,7 @@ In the chat, check that the toggle says "workflow". Start a new thread. Paste a 
 
 Watch the numbered step blocks appear in order.
 
-Extract — point at it: "one LLM call, gpt-5-nano, returns a DraftCV".
+Extract — point at it: "one LLM call, gpt-6-luna, returns a DraftCV".
 Merge — "pure code, keeping the fields we already have".
 Validate — "Zod safeParse, fails because company is missing".
 ask-field — "code branch picked the question".
