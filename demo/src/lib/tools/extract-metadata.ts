@@ -1,36 +1,15 @@
-import { openai } from "@ai-sdk/openai";
 import { createTool } from "@mastra/core/tools";
-import { generateObject } from "ai";
 import { z } from "zod";
+import { extractDraft } from "@/lib/extract";
 import { DraftCVSchema } from "@/lib/schemas";
-
-// Mechanical extraction — cheap, fast, non-reasoning.
-const extractorModel = openai("gpt-5-nano");
 
 export const extractMetadata = createTool({
 	id: "extract-metadata",
 	description:
-		"Extract a draft CV (name, headline, skills, jobs) from free-form user text in one shot. Any field you cannot infer from the text is simply omitted. Call at most once per user message.",
+		"Extract a draft CV (name, headline, skills, jobs) from free-form user text in one shot. Fields that cannot be inferred are null. Call at most once per user message.",
 	inputSchema: z.object({
 		text: z.string().describe("User's original free-form description"),
 	}),
 	outputSchema: DraftCVSchema,
-	execute: async (rawInput: unknown) => {
-		const input =
-			rawInput && typeof rawInput === "object" && "context" in rawInput
-				? (rawInput as { context: { text: string } }).context
-				: (rawInput as { text: string });
-		const { object } = await generateObject({
-			model: extractorModel,
-			schema: DraftCVSchema,
-			prompt: [
-				"Extract CV fields from the message below.",
-				"Omit any field you cannot infer — never invent a name, company, role, or dates.",
-				"",
-				"Message:",
-				input.text,
-			].join("\n"),
-		});
-		return object;
-	},
+	execute: async ({ text }) => extractDraft(text),
 });

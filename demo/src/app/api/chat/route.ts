@@ -12,7 +12,7 @@ import {
 import { mastra } from "@/lib/mastra";
 import { renderCVtoPdf } from "@/lib/pdf";
 import { CVSchema, type UISpec } from "@/lib/schemas";
-import { cvWorkflow } from "@/lib/workflows/cv-workflow";
+import { type CVWorkflowResult, cvWorkflow } from "@/lib/workflows/cv-workflow";
 
 export const maxDuration = 120;
 
@@ -32,13 +32,15 @@ export async function POST(req: Request) {
 
 	if (backend === "agent") {
 		const lastUser = messages.filter((m) => m.role === "user").at(-1);
-		const params: Record<string, unknown> = {
+		// Only the latest user turn is sent: Mastra memory already holds the
+		// thread history and the working-memory draft.
+		const params = {
 			messages: lastUser ? [lastUser] : messages,
 			maxSteps: 12,
+			...(threadId && resourceId
+				? { memory: { thread: threadId, resource: resourceId } }
+				: {}),
 		};
-		if (threadId && resourceId) {
-			params.memory = { thread: threadId, resource: resourceId };
-		}
 
 		const stream = createUIMessageStream({
 			execute: async ({ writer }) => {
@@ -47,6 +49,7 @@ export async function POST(req: Request) {
 						mastra,
 						agentId: "cvAgent",
 						params,
+						version: "v7",
 					});
 					writer.merge(agentStream);
 				} catch (err) {
@@ -146,12 +149,7 @@ export async function POST(req: Request) {
 				};
 
 				let finalDraft = state.draft;
-				let finalResult: {
-					merged: typeof state.draft;
-					valid: boolean;
-					issue: string | null;
-					question: string | null;
-				} | null = null;
+				let finalResult: CVWorkflowResult | null = null;
 
 				const run = await cvWorkflow.createRun();
 				const wfStream = await run.stream({
@@ -207,7 +205,7 @@ export async function POST(req: Request) {
 						}
 						// Either ask-field or ready is the final branch step.
 						if (stepId === "ask-field" || stepId === "ready") {
-							finalResult = payload?.result as typeof finalResult;
+							finalResult = payload?.result as CVWorkflowResult;
 						}
 					}
 				}
@@ -217,10 +215,9 @@ export async function POST(req: Request) {
 				if (!finalResult) {
 					const done = await wfStream.result;
 					const raw = (done as { result?: unknown }).result as
-						| Record<string, typeof finalResult>
+						| (CVWorkflowResult & Record<string, CVWorkflowResult | undefined>)
 						| undefined;
-					finalResult =
-						raw?.["ask-field"] ?? raw?.ready ?? (raw as typeof finalResult);
+					finalResult = raw?.["ask-field"] ?? raw?.ready ?? raw ?? null;
 				}
 
 				if (finalResult) {

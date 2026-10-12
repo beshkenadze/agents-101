@@ -1,5 +1,5 @@
-import Firecrawl from "@mendable/firecrawl-js";
 import { createTool } from "@mastra/core/tools";
+import Firecrawl from "@mendable/firecrawl-js";
 import { z } from "zod";
 
 const SearchResultSchema = z.object({
@@ -16,25 +16,24 @@ export const webSearch = createTool({
 		query: z.string().describe("Focused search query, 3-8 words"),
 	}),
 	outputSchema: z.object({ results: z.array(SearchResultSchema) }),
-	execute: async (rawInput: unknown) => {
-		const input =
-			rawInput && typeof rawInput === "object" && "context" in rawInput
-				? (rawInput as { context: { query: string } }).context
-				: (rawInput as { query: string });
-
+	execute: async ({ query }) => {
 		const apiKey = process.env.FIRECRAWL_API_KEY;
 		if (!apiKey) return { results: [] };
 
 		const app = new Firecrawl({ apiKey });
-		const res = await app.search(input.query, { limit: 3 });
+		const res = await app.search(query, { limit: 3 });
 
-		const web = res.data?.web ?? [];
 		return {
-			results: web.map((r) => ({
-				title: r.title ?? "",
-				url: r.url ?? "",
-				snippet: (r.description ?? r.markdown ?? "").slice(0, 240),
-			})),
+			results: (res.web ?? []).map((r) => {
+				// Results are either light search hits or full scraped documents.
+				const hit = "description" in r || "title" in r ? r : undefined;
+				const doc = "metadata" in r || "markdown" in r ? r : undefined;
+				return {
+					title: hit?.title ?? doc?.metadata?.title ?? "",
+					url: hit?.url ?? doc?.metadata?.sourceURL ?? "",
+					snippet: (hit?.description ?? doc?.markdown ?? "").slice(0, 240),
+				};
+			}),
 		};
 	},
 });
