@@ -34,7 +34,9 @@ class: 'center-v'
 </div>
 
 <!--
-Hi, I'm Aleksandr.
+Hi! I'm Aleksandr, and I've been an independent developer for more than 20 years.
+
+Today you deal with AI agents every day, directly or indirectly. Maybe you've wondered how they are built. This talk is an introduction to agents and how they are different from a simple API call.
 
 In 20 minutes we go from one LLM API call to a working agent. We will look at three building blocks: completion, structured output, and tools. Then we put them in a loop. That loop is what makes an agent.
 
@@ -223,7 +225,7 @@ status: "§ trade-offs"
 <ul class="checks">
 <li class="minus">More tokens, more latency</li>
 <li class="minus">Harder to reproduce &amp; debug</li>
-<li class="minus">Can bypass guardrails &amp; drift off-task</li>
+<li class="minus">Can ignore instructions &amp; drift off-task</li>
 </ul>
 </div>
 </div>
@@ -235,7 +237,7 @@ But this flexibility is not free. Let me be concrete.
 
 What you get is real. Agents do recover from broken tool calls. They do ask clarifying questions. They do handle paths you did not plan for. I have seen them fix JSON errors on their own, pick a different tool after a failure, ask the user for a missing date.
 
-[click] What you pay. More tokens per turn — the model reads the tool list every step. Runs are hard to repeat: same input, different tool order, slightly different output. And this one matters most in production — an agent can bypass your guardrails. You ask it to format a CV. It sees the word "dollars". It decides to call your pricing API. Burns budget. Confuses the user. The same freedom that makes it adaptive makes it drift.
+[click] What you pay. More tokens per turn — the model reads the tool list every step. Runs are hard to repeat: same input, different tool order, slightly different output. And this one matters most in production — an agent can ignore the rules in your prompt. A prompt is a request, not a lock. You ask it to format a CV. It sees the word "dollars". It decides to call your pricing API. Burns budget. Confuses the user. The same freedom that makes it adaptive makes it drift. So the rules that really matter — money, permissions, data — check them in code, not only in the prompt.
 
 [click] Simple rule. Know the steps — workflow. Don't know — agent. Either way, know the risks. In the demo at the end, we run the same task through both. You will see the difference.
 -->
@@ -244,7 +246,7 @@ What you get is real. Agents do recover from broken tool calls. They do ask clar
 title: Structured output
 path: "/02-structured"
 meta: "§ 02 · structured output"
-status: "§ generateObject"
+status: "§ Output.object"
 layout: split
 ---
 
@@ -257,17 +259,19 @@ layout: split
 <div class="code-bar"><span class="dots-mini"><i></i><i></i><i></i></span>extract.ts</div>
 
 ```ts
-const { object } = await generateObject({
+const { output } = await generateText({
   model:  openai("gpt-5"),
-  schema: z.object({
-    name:   z.string(),
-    skills: z.array(z.string()),
-    years:  z.number().min(0),
+  output: Output.object({
+    schema: z.object({
+      name:   z.string(),
+      skills: z.array(z.string()),
+      years:  z.number().min(0),
+    }),
   }),
   prompt: userText,
 })
 
-// object is fully typed. no parsing.
+// output is fully typed. no parsing.
 ```
 
 ::right::
@@ -277,17 +281,17 @@ const { object } = await generateObject({
 <p class="body" style="margin-top: 16px;" v-click>Works in workflows, in validation, inside agents — anywhere you need a predictable output shape.</p>
 
 <div class="warn-note" v-click>
-<strong>// heads up:</strong> models occasionally break JSON. Plug in a fixer, or re-send to a cheap model (nano / mini) for repair.
+<strong>// heads up:</strong> models occasionally break JSON. Strict mode helps where the provider supports it. Otherwise plug in a fixer, or re-send to a cheap model (nano / mini) for repair.
 </div>
 
 <!--
 Before we go deeper into agents, one more piece: structured output. Useful everywhere, not just with agents. Worth a pause.
 
-When a model replies with free text, it is fine for chat. Useless for code. Your next step wants an object with named fields, not a paragraph to parse. generateObject from the AI SDK solves this. You pass a Zod schema. You get a typed object back. No "please respond in JSON" prompt tricks. The SDK handles it.
+When a model replies with free text, it is fine for chat. Useless for code. Your next step wants an object with named fields, not a paragraph to parse. In the AI SDK, it is the same generateText call — you just add an output option: Output.object with a Zod schema. You get a typed object back. (Older AI SDK versions had a separate generateObject function. It is deprecated now — if you see it in tutorials, this is the replacement.) No "please respond in JSON" prompt tricks. The SDK handles it.
 
 [click] This works everywhere. Inside a workflow step. As a validation pass. Inside an agent tool. Anywhere you need a predictable output shape. In our demo, the same pattern is used three times — workflow extract step, agent extractMetadata tool, and memory schema. One Zod schema, three call sites.
 
-[click] One honest gotcha: models still break JSON sometimes. Long outputs. Deep nesting. Edge cases. The standard fix is a repair pass. Either plug in a JSON fixer library, or send the broken output to a cheap model — gpt-5-nano or gpt-5-mini — whose only job is "parse this mess, return valid JSON". Two-stage repair. Boring and reliable.
+[click] One honest gotcha: models still break JSON sometimes. Long outputs. Deep nesting. Edge cases. Some providers have a strict mode that guarantees valid JSON for the schema — use it when you can. When you can't, the standard fix is a repair pass. Either plug in a JSON fixer library, or send the broken output to a cheap model — gpt-5-nano or gpt-5-mini — whose only job is "parse this mess, return valid JSON". Two-stage repair. Boring and reliable.
 -->
 
 ---
@@ -315,9 +319,9 @@ status: "§ bridge"
 <!--
 One quick bridge before we talk tools. Structured output and tools are much closer than they look.
 
-A tool call is structured output that your code runs. Same mechanism as generateObject. Same Zod engine. Same JSON. The only difference is what happens after.
+A tool call is structured output that your code runs. Same mechanism as Output.object. Same Zod engine. Same JSON. The only difference is what happens after.
 
-With generateObject, you get an object. You use it.
+With structured output, you get an object. You use it.
 
 With a tool call, the model replies with JSON — "I want to call extractMetadata with this text". Your code looks up the function, runs it, and feeds the result back to the next model turn.
 
@@ -348,13 +352,13 @@ export const extractMetadata = createTool({
   description:  "Extract a draft CV from free-form user text.",
   inputSchema:  z.object({ text: z.string() }),
   outputSchema: DraftCVSchema,
-  execute: async ({ context }) => {
-    const { object } = await generateObject({
+  execute: async ({ text }) => {
+    const { output } = await generateText({
       model:  openai("gpt-5-nano"), // cheap — structured extraction
-      schema: DraftCVSchema,
-      prompt: `Extract from: ${context.text}`,
+      output: Output.object({ schema: DraftCVSchema }),
+      prompt: `Extract from: ${text}`,
     })
-    return object
+    return output
   },
 })
 ```
@@ -379,7 +383,7 @@ A tool is a function the model can pick from a list. On the left is createTool f
 
 [click] The model decides if the tool fits the current task. Under the hood, this is a completion call with the tool list in the prompt. Nothing magic.
 
-[click] It fills the inputSchema — same Zod engine as generateObject — with arguments it pulled from context.
+[click] It fills the inputSchema — same Zod engine as structured output — with arguments it pulled from the conversation.
 
 [click] execute runs. The return value is fed back to the next model turn as "tool result". The loop continues.
 
@@ -416,7 +420,7 @@ status: "§ choose wisely"
 <ul class="checks">
 <li>Adaptive — recovers &amp; improvises</li>
 <li>Asks for data it doesn't have</li>
-<li class="minus">May drift, bypass guardrails</li>
+<li class="minus">May drift, ignore prompt rules</li>
 </ul>
 <pre class="ascii" style="margin-top: auto; padding-top: 28px; font-size: 20px;">       ┌──────┐
   goal→│ loop │→ tools
@@ -430,7 +434,7 @@ So — two approaches. When do you pick which? Let me put them side by side.
 
 Workflow: you write the steps yourself. Deterministic. You own every step. Cheaper per turn. Easier to debug — the trace reads like a log file. And a workflow is not dumb. With human-in-the-loop, you can fake a lot of agent-like behavior. The workflow pauses. Asks the user a question. Resumes. That is exactly what our workflow backend does. Control stays with you.
 
-[click] Agent: you give the model a goal and a toolbox. Let it figure out the rest. More adaptive. Recovers, asks, improvises. But it can drift. Go out of scope. Bypass your guardrails. Do things you did not plan. The same freedom that makes it powerful makes it drift.
+[click] Agent: you give the model a goal and a toolbox. Let it figure out the rest. More adaptive. Recovers, asks, improvises. But it can drift. Go out of scope. Ignore the rules in its prompt. Do things you did not plan. The same freedom that makes it powerful makes it drift.
 
 Simple test. If you can draw a flowchart from start to end — workflow. If the path depends on decisions mid-run — agent. Both are legitimate. You do not need an agent everywhere. Often a workflow with one smart step in the middle is enough.
 -->
@@ -462,13 +466,15 @@ status: "§ orchestration"
 <div class="card">
 <span class="idx">02 · swarm</span>
 <h4>Swarm</h4>
-<p>Agents run in parallel. No boss. Results merge at the end.</p>
-<pre class="ascii" style="margin-top: auto; padding-top: 16px; font-size: 18px; color: var(--fg-dim);">  ┌──┐ ┌──┐ ┌──┐
-  │A │ │B │ │C │
-  └─┬┘ └─┬┘ └─┬┘
-    └────┼────┘
-         ▼
-       merge</pre>
+<p>No boss. Agents pass control to each other — "this part is yours".</p>
+<pre class="ascii" style="margin-top: auto; padding-top: 16px; font-size: 18px; color: var(--fg-dim);">
+  ┌──┐  ⇄  ┌──┐
+  │A │     │B │
+  └──┘     └──┘
+     ⇅     ⇅
+      ┌──┐
+      │C │
+      └──┘</pre>
 </div>
 <div class="card">
 <span class="idx">03 · router</span>
@@ -489,7 +495,7 @@ In real products, one agent is rarely enough. You end up putting several togethe
 
 Supervisor. One lead agent breaks the task down and hands subtasks to specialists. "Write a report" — lead splits it into research, draft, edit. Each goes to a different agent. Lead collects the results. Classic manager-and-team.
 
-Swarm. Agents run in parallel. No lead. Each one works on its own. Results merge at the end. Good for work that splits naturally: "summarize these ten documents" — one agent per document, all running at once.
+Swarm. No lead agent. Each agent works on the conversation until it sees "this is not my job" — then it hands control to another agent. A support bot is a good example: the triage agent talks to the user, then hands off to billing, billing hands off to tech support. Control moves around, nobody sits on top. (Running many agents at the same time and merging the results is a different thing — that is just parallel fan-out.)
 
 Router. An agent whose only job is to route. Reads the request. Picks the right specialist. Hands off. Does not execute anything itself.
 
@@ -604,7 +610,7 @@ status: "backend · workflow"
 
 ```ts
 export const cvWorkflow = createWorkflow({ id: "cv-workflow", inputSchema })
-  .then(extract)    // 1 × generateObject → DraftCVSchema · gpt-5-nano
+  .then(extract)    // 1 × Output.object → DraftCVSchema · gpt-5-nano
   .then(merge)      // plain code — keep fields already filled
   .then(validate)   // CVSchema.safeParse → { valid, issue }
   .branch([
@@ -625,7 +631,7 @@ Backend A — workflow. Let me walk through the code first, then we switch to th
 
 Four named steps. We wire them with Mastra's createWorkflow. The chain: extract, merge, validate, branch.
 
-Extract is the only LLM call in the whole flow. One generateObject on gpt-5-nano. Cheap. Fast. Non-reasoning. Returns a partial DraftCV — only the fields it could infer from the text.
+Extract is the only LLM call in the whole flow. One structured-output call on gpt-5-nano — the exact same extractDraft function the agent's tool uses. Cheap. Fast. Non-reasoning. Returns a partial DraftCV — only the fields it could infer from the text.
 
 Merge is pure code. No model. New fields fill empty slots. Already-filled fields are never wiped. That is how state grows across turns.
 
@@ -694,7 +700,7 @@ Backend B — agent. Same task. Same CV shape. Completely different structure.
 
 No steps wired by us. Three things: instructions, tools, memory.
 
-The instructions are the agent's job description. Extract fields. Validate them. Confirm with the user. Generate the PDF. And one hard rule: never call generatePdf without explicit approval. That line is our only guardrail against a runaway agent.
+The instructions are the agent's job description. Extract fields. Validate them. Confirm with the user. Generate the PDF. And one rule: never call generatePdf without explicit approval. Be honest about what this is — a line in a prompt. A soft guardrail. The hard guardrail is in code: generatePdf's inputSchema is the strict CVSchema, so the agent physically cannot render a CV with missing fields, no matter what it decides.
 
 Five tools. Four overlap with the workflow. extractMetadata — same one-shot extractor. validateCV — same Zod safeParse. askConfirmation — renders a Yes/No card. generatePdf — renders the file. One extra: webSearch via Firecrawl. It is there if the agent decides it needs to check a company name. Only fires if the agent decides. That word matters.
 
