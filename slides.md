@@ -104,7 +104,7 @@ status: "§ completion"
 import { generateText } from "ai"
 
 const { text } = await generateText({
-  model:  openai("gpt-5"),
+  model:  openai("gpt-6-sol"),
   prompt: "Rewrite my work experience nicely.",
 })
 
@@ -116,7 +116,7 @@ const { text } = await generateText({
 <!--
 Let's start with the simplest thing. Completion is one call. You send a prompt, you get text back. That's the atomic unit of everything today.
 
-Here is the AI SDK version. We call generateText. We pass a model — gpt-5 here — and a prompt: "rewrite my work experience nicely". We get a string back.
+Here is the AI SDK version. We call generateText. We pass a model — gpt-6-sol here — and a prompt: "rewrite my work experience nicely". We get a string back.
 
 That is fine for a chat reply. But if the next step is code — building a CV object with fields — a free string is the wrong shape. You would have to parse it. Parsing LLM text is a losing game. We will fix that in two slides with structured output.
 -->
@@ -260,7 +260,7 @@ layout: split
 
 ```ts
 const { output } = await generateText({
-  model:  openai("gpt-5"),
+  model:  openai("gpt-6-sol"),
   output: Output.object({
     schema: z.object({
       name:   z.string(),
@@ -679,7 +679,7 @@ status: "backend · agent"
 ```ts
 export const cvAgent = new Agent({
   id:    "cv-agent",
-  model: "openai/gpt-5-mini",
+  model: "openai/gpt-6-sol",
   instructions: `
     You are a CV-building agent. Extract → validate → confirm → generate.
     Never invent facts. Never call generatePdf without explicit approval.`,

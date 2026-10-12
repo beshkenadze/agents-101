@@ -9,7 +9,7 @@ import { webSearch } from "@/lib/tools/web-search";
 export const cvAgent = new Agent({
 	id: "cv-agent",
 	name: "CV Agent",
-	model: "openai/gpt-5-mini",
+	model: "openai/gpt-6-sol",
 	instructions: `
 You are a CV-building agent. You turn the user's free-form text into a
 structured CV and deliver it as a PDF after the user explicitly confirms.
