@@ -67,22 +67,22 @@ meta: "§ 00"
 <span class="item" v-mark.underline.orange="4">Live demo — CV generator</span>
 <span class="t">~8 min</span>
 <span class="n">05</span>
-<span class="item" v-mark.underline.orange="5">Wrap-up &amp; questions</span>
+<span class="item" v-mark.underline.orange="5">Wrap-up</span>
 <span class="t">~1 min</span>
 </div>
 
 <!--
 Here is the plan.
 
-[click] First — completion. The simplest block. One call in, one string out. Three minutes, because everything else sits on top of it.
+[click] Completion — the simplest building block.
 
-[click] Then structured output and tools. Structured output turns text into typed data. Tools turn a model call into an action. I'll also show that a tool call is really just structured output that your code runs.
+[click] Structured output and tools.
 
-[click] Next — workflow vs agent. And how to put agents together when one is not enough: supervisor, swarm, router.
+[click] Workflow or agent — and how agents work together.
 
-[click] Then the live demo. CV generator, two backends, side by side. About eight minutes.
+[click] The live demo — the biggest part of the talk.
 
-[click] At the end — a one-slide recap, and questions.
+[click] And a short recap.
 -->
 
 ---
