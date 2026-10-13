@@ -23,7 +23,8 @@ bun run export:notes   # speaker notes as a separate PDF
 
 ## Structure
 
-- `slides.md` — all 15 slides plus speaker notes
+- `slides.md` — all slides plus speaker notes (the source of truth)
+- `agents-101.md` — readable export: slide text, speaker notes, timing, version. Regenerate with `bun run export:md`
 - `style.css` — design tokens (colors, fonts, layout classes)
 - `slide-top.vue` / `slide-bottom.vue` — terminal chrome, reads `path` / `meta` / `status` from per-slide frontmatter
 - `layouts/split.vue` — header + two-column layout for code + text slides

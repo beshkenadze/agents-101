@@ -7,10 +7,15 @@
     "build": "slidev build",
     "dev": "slidev --open",
     "export": "slidev export",
-    "export:notes": "slidev export-notes"
+    "export:notes": "slidev export-notes",
+    "export:md": "node scripts/export-md.mjs"
   },
   "dependencies": {
     "@slidev/cli": "^0.50.0",
     "@slidev/theme-default": "^0.25.0"
+  },
+  "devDependencies": {
+    "turndown": "^7.2.4",
+    "turndown-plugin-gfm": "^1.0.2"
   }
 }
