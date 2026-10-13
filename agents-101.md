@@ -4,10 +4,10 @@
 
 | | |
 |---|---|
-| **Version** | `2026.10.12-a3a70fe` |
+| **Version** | `2026.10.13-09d5d5b` |
 | **State** | Branch `talk-texts`, **not merged to `main` yet** — the published deck is older. |
 | **Format** | 20 min · live demo · 19 slides |
-| **Speaker notes** | 3752 words ≈ 31:21 at 120 wpm (budget 19 min) |
+| **Speaker notes** | 3685 words ≈ 30:47 at 120 wpm (budget 19 min) |
 | **Slides** | https://beshkenadze.github.io/agents-101/ |
 | **Code** | https://github.com/beshkenadze/agents-101 |
 
@@ -19,13 +19,13 @@ Notes only — clicks, pauses and the live demo add time on top.
 
 | Section | Slides | Notes | Budget |
 |---|---|---|---|
-| 00 · Intro & agenda | 1–2 | 1:44 ⚠️ | 1:00 |
+| 00 · Intro & agenda | 1–2 | 1:10 ⚠️ | 1:00 |
 | 01 · Completion vs. agents | 3–6 | 4:54 ⚠️ | 3:00 |
 | 02 · Structured output & tools | 7–9 | 5:03 ⚠️ | 4:00 |
 | 03 · Workflow vs. agent · orchestration | 10–11 | 3:16 ⚠️ | 2:00 |
 | 04 · Live demo — CV generator | 12–18 | 14:57 ⚠️ | 8:00 |
 | end · Wrap-up | 19–19 | 1:27 ⚠️ | 1:00 |
-| **Total** | 1–19 | **31:21** | **19:00** |
+| **Total** | 1–19 | **30:47** | **19:00** |
 
 ## Slides
 
@@ -83,7 +83,7 @@ At the end — a live demo. A CV generator with two backends: a workflow and an 
 
 ## 02 · Agenda
 
-`/agenda.md` · notes: 101 words ≈ 0:51
+`/agenda.md` · notes: 34 words ≈ 0:17
 
 ### On screen
 
@@ -95,21 +95,21 @@ At the end — a live demo. A CV generator with two backends: a workflow and an 
 - 02 · Structured output & tools — ~4 min
 - 03 · Workflow vs. agent · orchestration — ~2 min
 - 04 · Live demo — CV generator — ~8 min
-- 05 · Wrap-up & questions — ~1 min
+- 05 · Wrap-up — ~1 min
 
 ### Say
 
 Here is the plan.
 
-**[click]** First — completion. The simplest block. One call in, one string out. Three minutes, because everything else sits on top of it.
+**[click]** Completion — the simplest building block.
 
-**[click]** Then structured output and tools. Structured output turns text into typed data. Tools turn a model call into an action. I'll also show that a tool call is really just structured output that your code runs.
+**[click]** Structured output and tools.
 
-**[click]** Next — workflow vs agent. And how to put agents together when one is not enough: supervisor, swarm, router.
+**[click]** Workflow or agent — and how agents work together.
 
-**[click]** Then the live demo. CV generator, two backends, side by side. About eight minutes.
+**[click]** The live demo — the biggest part of the talk.
 
-**[click]** At the end — a one-slide recap, and questions.
+**[click]** And a short recap.
 
 ---
 
@@ -881,6 +881,7 @@ Changes to the slides, newest first.
 
 | Date | Commit | Change |
 |---|---|---|
+| 2026-10-13 | [`09d5d5b`](https://github.com/beshkenadze/agents-101/commit/09d5d5b) | slides: shorter agenda notes; agenda ends with wrap-up |
 | 2026-10-12 | [`a3a70fe`](https://github.com/beshkenadze/agents-101/commit/a3a70fe) | slides: tighter intro notes; QR now points to the repo |
 | 2026-10-12 | [`28f5685`](https://github.com/beshkenadze/agents-101/commit/28f5685) | slides: replace ASCII diagrams with archify SVGs |
 | 2026-10-12 | [`c6b87d7`](https://github.com/beshkenadze/agents-101/commit/c6b87d7) | Use gpt-6-sol for the agent and slide examples; fix stale tool list in chat header |
