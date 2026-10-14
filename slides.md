@@ -377,7 +377,7 @@ status: "§ choose wisely"
 
 <div class="kicker">one rule of thumb</div>
 
-<h2 class="heading" style="font-size: 72px;">Flowchart fits? Workflow.<br/>Depends on the run? Agent.</h2>
+<h2 class="heading" style="font-size: 72px;">Known steps? Workflow.<br/>Unknown? Agent.</h2>
 
 <div class="split" style="margin-top: 16px;">
 <div class="col">
@@ -386,7 +386,7 @@ status: "§ choose wisely"
 <ul class="checks">
 <li>Deterministic — you control each step</li>
 <li>Cheaper · easier to debug</li>
-<li>Human-in-the-loop can emulate agent-like behaviour</li>
+<li>Human-in-the-loop can emulate agent-like behavior</li>
 </ul>
 <img class="diagram" src="/diagrams/workflow-mini.svg" alt="Three fixed steps wired by you" style="margin-top: auto; padding-top: 28px;" />
 </div>
@@ -403,13 +403,13 @@ status: "§ choose wisely"
 </div>
 
 <!--
-So — two approaches. When do you pick which? Let me put them side by side.
+So — two approaches, side by side.
 
-Workflow: you write the steps yourself. Deterministic. You own every step. Cheaper per turn. Easier to debug — the trace reads like a log file. And a workflow is not dumb. With human-in-the-loop, you can fake a lot of agent-like behavior. The workflow pauses. Asks the user a question. Resumes. That is exactly what our workflow backend does. Control stays with you.
+Workflow: you write the steps. You control everything, it's cheaper and easier to debug. And a workflow can still talk to the user — it pauses, asks a question, and continues. That's human-in-the-loop, and our workflow backend does exactly this.
 
-[click] Agent: you give the model a goal and a toolbox. Let it figure out the rest. More adaptive. Recovers, asks, improvises. But it can drift. Go out of scope. Ignore the rules in its prompt. Do things you did not plan. The same freedom that makes it powerful makes it drift.
+[click] Agent: you give it a goal and tools, and it finds the way. More flexible — but it can drift.
 
-Simple test. If you can draw a flowchart from start to end — workflow. If the path depends on decisions mid-run — agent. Both are legitimate. You do not need an agent everywhere. Often a workflow with one smart step in the middle is enough.
+You don't need an agent everywhere. Often a workflow with one smart step is enough.
 -->
 
 ---
@@ -447,15 +447,15 @@ status: "§ orchestration"
 <p class="rule-center" v-click>In real life you mix them: a workflow step that is an agent with a supervisor inside.</p>
 
 <!--
-In real products, one agent is rarely enough. You end up putting several together. Three patterns worth knowing.
+Sometimes one agent is not enough. Three common patterns.
 
-Supervisor. One lead agent breaks the task down and hands subtasks to specialists. "Write a report" — lead splits it into research, draft, edit. Each goes to a different agent. Lead collects the results. Classic manager-and-team.
+Supervisor: one lead agent splits the task and gives parts to other agents — like a manager with a team.
 
-Swarm. No lead agent. Each agent works on the conversation until it sees "this is not my job" — then it hands control to another agent. A support bot is a good example: the triage agent talks to the user, then hands off to billing, billing hands off to tech support. Control moves around, nobody sits on top. (Running many agents at the same time and merging the results is a different thing — that is just parallel fan-out.)
+Swarm: no boss. An agent works until it sees "this is not my job" — then it hands control to another agent. Think of a support bot: triage, then billing, then tech support.
 
-Router. An agent whose only job is to route. Reads the request. Picks the right specialist. Hands off. Does not execute anything itself.
+Router: it only reads the request and sends it to the right agent. It does no work itself.
 
-[click] In practice, you mix them. A workflow of four steps, where step two is a supervisor with three specialists under it. Or a router at the top that sends code questions to one agent and text questions to another. Do not pick one pattern. Pick what each layer needs. And do not get stuck on "which pattern is right" — pick the one that fits the shape of your task.
+[click] In real life you mix them — for example, a workflow where one step is a supervisor with a few agents. Pick what fits your task.
 -->
 
 ---
