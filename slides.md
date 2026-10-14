@@ -128,7 +128,7 @@ meta: "§ 01 · workflow"
 status: "§ workflow"
 ---
 
-<div class="kicker">if you can draw the flowchart — ship it</div>
+<div class="kicker">know the steps? ship a workflow</div>
 
 <h2 class="heading" style="font-size: 76px;">Completion shines<br/>inside a workflow.</h2>
 
@@ -274,13 +274,13 @@ const { output } = await generateText({
 </div>
 
 <!--
-Before we go deeper into agents, one more piece: structured output. Useful everywhere, not just with agents. Worth a pause.
+Before we go deeper — structured output. It's useful everywhere, not only in agents.
 
-When a model replies with free text, it is fine for chat. Useless for code. Your next step wants an object with named fields, not a paragraph to parse. In the AI SDK, it is the same generateText call — you just add an output option: Output.object with a Zod schema. You get a typed object back. (Older AI SDK versions had a separate generateObject function. It is deprecated now — if you see it in tutorials, this is the replacement.) No "please respond in JSON" prompt tricks. The SDK handles it.
+Free text is fine for chat, but your code needs an object with named fields. In the AI SDK it's the same generateText call — you add an output option: Output.object with a Zod schema. You get a typed object back. No "please answer in JSON" tricks. If you see generateObject in old tutorials — that's the old way, now deprecated.
 
-[click] This works everywhere. Inside a workflow step. As a validation pass. Inside an agent tool. Anywhere you need a predictable output shape. In our demo, the same pattern is used three times — workflow extract step, agent extractMetadata tool, and memory schema. One Zod schema, three call sites.
+[click] It works everywhere: a workflow step, validation, an agent tool. In our demo, one Zod schema is used in several places.
 
-[click] One honest gotcha: models still break JSON sometimes. Long outputs. Deep nesting. Edge cases. Some providers have a strict mode that guarantees valid JSON for the schema — use it when you can. When you can't, the standard fix is a repair pass. Either plug in a JSON fixer library, or send the broken output to a cheap model — like gpt-6-luna — whose only job is "parse this mess, return valid JSON". Two-stage repair. Boring and reliable.
+[click] But there is one problem: models sometimes break JSON. Some providers have a strict mode — use it if you can. If not, use a JSON fixer library, or send the broken output to a cheap model like gpt-6-luna to repair it.
 -->
 
 ---
@@ -299,17 +299,13 @@ status: "§ bridge"
 <p class="body" style="margin-top: 32px; font-size: 24px;" v-click>The model doesn't <em style="color: var(--accent); font-style: normal;">call</em> anything — it <strong>asks</strong> in JSON. Your code calls.</p>
 
 <!--
-One quick bridge before we talk tools. Structured output and tools are much closer than they look.
+One quick bridge. Structured output and tools are closer than they look.
 
-A tool call is structured output that your code runs. Same mechanism as Output.object. Same Zod engine. Same JSON. The only difference is what happens after.
+A tool call is just structured output. The model replies with JSON: "I want to call extractMetadata with this text". Your code finds the function, runs it, and sends the result back to the model.
 
-With structured output, you get an object. You use it.
+The model never calls anything. It can't — it only generates text. Your code does the real work.
 
-With a tool call, the model replies with JSON — "I want to call extractMetadata with this text". Your code looks up the function, runs it, and feeds the result back to the next model turn.
-
-The model never calls anything. It cannot. It is a text generator. All it does is predict the name of a tool and its arguments. Your code does the real work.
-
-[click] Once you see it this way, tools stop being magical. The model asks. Your code calls. Everything else — the loop, the retry, the tool selection — is runtime logic around this simple fact.
+[click] Once you see this, tools stop being magic. The model asks. Your code calls.
 -->
 
 ---
@@ -322,7 +318,7 @@ layout: split
 
 <div class="kicker">now we're talking about agents</div>
 
-<h2 class="heading">A tool is a function<br/>the model calls itself.</h2>
+<h2 class="heading">A tool is a function<br/>the model can ask for.</h2>
 
 ::left::
 
@@ -357,19 +353,19 @@ export const extractMetadata = createTool({
 <p class="body" style="margin-top: 28px; font-size: 20px;" v-click="5">The agent chooses <em style="color: var(--accent); font-style: normal;">when</em> and <em style="color: var(--accent); font-style: normal;">which</em> tool to call. You don't.</p>
 
 <!--
-Now tools. This is where agent behavior lives.
+Now tools — this is where agent behavior lives.
 
-A tool is a function the model can pick from a list. On the left is createTool from Mastra — real code from our demo. Five things: an id, a description, an input Zod schema, an output Zod schema, and an execute function. extractMetadata takes free-form text and returns a DraftCV. The model only sees the description and the schemas. Never the execute body. It decides from that.
+This is real code from the demo, with Mastra's createTool: an id, a description, input and output Zod schemas, and an execute function. The model never sees the execute body — only the description and the schemas.
 
-[click] The model reads the description. This is the most important part of a tool. Vague description — dead tool. The agent will not pick it. Good descriptions are one-liners: what it does, when to use it.
+[click] So the description is the most important part. A vague description — and the model never picks the tool.
 
-[click] The model decides if the tool fits the current task. Under the hood, this is a completion call with the tool list in the prompt. Nothing magic.
+[click] The model decides if the tool fits the task.
 
-[click] It fills the inputSchema — same Zod engine as structured output — with arguments it pulled from the conversation.
+[click] It fills the input schema with arguments from the conversation.
 
-[click] execute runs. The return value is fed back to the next model turn as "tool result". The loop continues.
+[click] Your code runs execute, and the result goes back to the model. The loop continues.
 
-[click] The key point: you do not call the tool. The agent decides when and which. You ship the schema and the execute body, and let go. This is the anxious part when you build your first agent. You wrote the code. But you are not calling it.
+[click] The key point: you don't call the tool. The agent decides when and which. You wrote the code — but you are not calling it.
 -->
 
 ---
