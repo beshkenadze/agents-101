@@ -111,13 +111,21 @@ export async function POST(req: Request) {
 					writer.write({
 						type: "data-workflow-step",
 						id: "step-pdf",
-						data: { step: 4, label: "renderPdf() · plain code", status: "running" },
+						data: {
+							step: 4,
+							label: "renderPdf() · plain code",
+							status: "running",
+						},
 					});
 					const pdf = await renderCVtoPdf(cv);
 					writer.write({
 						type: "data-workflow-step",
 						id: "step-pdf",
-						data: { step: 4, label: "renderPdf() · plain code", status: "done" },
+						data: {
+							step: 4,
+							label: "renderPdf() · plain code",
+							status: "done",
+						},
 					});
 
 					writer.write({
@@ -156,11 +164,19 @@ export async function POST(req: Request) {
 					inputData: { userText, draft: state.draft },
 				});
 
-				for await (const chunk of wfStream) {
+				for await (const chunk of wfStream.fullStream) {
+					// Mastra 1.x step events: payload.id is the step id and
+					// payload.output its result (older versions: stepId / result).
 					const payload = (chunk as { payload?: unknown }).payload as
-						| { stepId?: string; result?: unknown }
+						| {
+								id?: string;
+								stepId?: string;
+								output?: unknown;
+								result?: unknown;
+						  }
 						| undefined;
-					const stepId = payload?.stepId;
+					const stepId = payload?.id ?? payload?.stepId;
+					const stepOutput = payload?.output ?? payload?.result;
 
 					if (chunk.type === "workflow-step-start" && stepId) {
 						const meta = STEP_MAP[stepId];
@@ -190,9 +206,8 @@ export async function POST(req: Request) {
 						}
 						// Capture intermediate draft after merge for early preview.
 						if (stepId === "merge") {
-							const merged = (
-								payload?.result as { merged?: typeof state.draft }
-							)?.merged;
+							const merged = (stepOutput as { merged?: typeof state.draft })
+								?.merged;
 							if (merged) {
 								finalDraft = merged;
 								// Render preview only when the draft validates — emitUI
@@ -204,8 +219,8 @@ export async function POST(req: Request) {
 							}
 						}
 						// Either ask-field or ready is the final branch step.
-						if (stepId === "ask-field" || stepId === "ready") {
-							finalResult = payload?.result as CVWorkflowResult;
+						if ((stepId === "ask-field" || stepId === "ready") && stepOutput) {
+							finalResult = stepOutput as CVWorkflowResult;
 						}
 					}
 				}
