@@ -341,6 +341,38 @@ body::before {
 	border-left: 2px solid var(--accent-dim);
 }
 
+.msg.error .role {
+	color: var(--danger);
+}
+.msg.error .content {
+	display: flex;
+	align-items: baseline;
+	gap: 14px;
+	padding-left: 16px;
+	border-left: 2px solid var(--danger);
+	color: var(--fg);
+	font-size: 13px;
+}
+.msg.error .error-text {
+	flex: 1;
+}
+.msg.error .retry {
+	flex: none;
+	padding: 3px 12px;
+	border: 1px solid var(--danger);
+	border-radius: 999px;
+	background: transparent;
+	color: var(--danger);
+	font-family: var(--font-mono);
+	font-size: 11px;
+	letter-spacing: 0.18em;
+	text-transform: uppercase;
+	cursor: pointer;
+}
+.msg.error .retry:hover {
+	background: color-mix(in oklab, var(--danger) 15%, transparent);
+}
+
 /* Tool call block */
 .tool {
 	display: grid;

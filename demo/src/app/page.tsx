@@ -33,7 +33,7 @@ type Backend = "workflow" | "agent";
 type WorkflowStep = {
 	step: 1 | 2 | 3 | 4;
 	label: string;
-	status: "running" | "done";
+	status: "running" | "done" | "error";
 };
 
 // Stage script. Clicking a chip sends it. The first message has no company
@@ -68,7 +68,7 @@ export default function ChatPage() {
 	);
 	const resourceId = "demo-user";
 
-	const { messages, sendMessage, status } = useChat({
+	const { messages, sendMessage, status, error, regenerate } = useChat({
 		transport: new DefaultChatTransport({
 			api: "/api/chat",
 			prepareSendMessagesRequest: ({ messages: msgs }) => ({
@@ -110,6 +110,17 @@ export default function ChatPage() {
 	};
 
 	const busy = status === "streaming" || status === "submitted";
+	// A failed turn: a transport/stream error, or an error part from the
+	// server. Retry re-sends the same user message.
+	const lastMessage = messages.at(-1);
+	const failed =
+		!busy &&
+		(!!error ||
+			(lastMessage?.role === "assistant" &&
+				lastMessage.parts.some((p) => p.type === "data-error")));
+	const retry = () => {
+		void regenerate();
+	};
 	// Show one chip: the next stage line that was not sent yet. The row stays
 	// in place (disabled) while the model answers, so the chat height does not
 	// jump and the conversation stays scrolled to the bottom.
@@ -124,7 +135,9 @@ export default function ChatPage() {
 			),
 	);
 	const suggestions = SUGGESTIONS.filter((s) => !sentTexts.has(s)).slice(0, 1);
-	const showSuggestions = suggestions.length > 0;
+	// While a turn is failed, only "retry" moves forward: no chip, so one
+	// click cannot skip a step of the script.
+	const showSuggestions = suggestions.length > 0 && !failed;
 
 	return (
 		<ReplyContext.Provider
@@ -193,8 +206,13 @@ export default function ChatPage() {
 										isLast={mi === messages.length - 1}
 										busy={busy}
 										backend={backend}
+										onRetry={retry}
 									/>
 								))}
+
+								{error && !busy && (
+									<ErrorLine message={error.message} onRetry={retry} />
+								)}
 
 								{busy && messages.at(-1)?.role !== "assistant" && (
 									<div className="msg assistant">
@@ -285,6 +303,28 @@ function UserLine({ children }: { children: React.ReactNode }) {
 	);
 }
 
+function ErrorLine({
+	message,
+	onRetry,
+}: {
+	message: string;
+	onRetry?: () => void;
+}) {
+	return (
+		<div className="msg error" role="alert">
+			<span className="role">error</span>
+			<span className="content">
+				<span className="error-text">{message}</span>
+				{onRetry && (
+					<button type="button" className="retry" onClick={onRetry}>
+						retry
+					</button>
+				)}
+			</span>
+		</div>
+	);
+}
+
 function Divider({ label }: { label: string }) {
 	return (
 		<div className="divider">
@@ -338,11 +378,13 @@ function MessageView({
 	isLast,
 	busy,
 	backend,
+	onRetry,
 }: {
 	message: UiMessage;
 	isLast: boolean;
 	busy: boolean;
 	backend: Backend;
+	onRetry: () => void;
 }) {
 	if (message.role === "user") {
 		const text = message.parts
@@ -473,6 +515,10 @@ function MessageView({
 
 	const lastAssistantText = textParts.map((p) => p.text).join("");
 
+	const errorPart = message.parts.findLast((p) => p.type === "data-error") as
+		| { data?: { message?: string } }
+		| undefined;
+
 	return (
 		<>
 			{backend === "workflow" && steps.length > 0 && (
@@ -489,7 +535,13 @@ function MessageView({
 					<ToolHeader
 						type="dynamic-tool"
 						toolName={`step ${s.step} · ${s.label}`}
-						state={s.status === "done" ? "output-available" : "input-available"}
+						state={
+							s.status === "done"
+								? "output-available"
+								: s.status === "error"
+									? "output-error"
+									: "input-available"
+						}
 					/>
 				</Tool>
 			))}
@@ -516,6 +568,13 @@ function MessageView({
 			})}
 
 			{lastAssistantText && <AssistantLine>{lastAssistantText}</AssistantLine>}
+
+			{errorPart?.data?.message && (
+				<ErrorLine
+					message={errorPart.data.message}
+					onRetry={isLast && !busy ? onRetry : undefined}
+				/>
+			)}
 
 			{uiSpecs.map((u) => {
 				// Hide stale Yes/No cards on older turns; CV previews stay.

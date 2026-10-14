@@ -26,6 +26,26 @@ type Body = {
 const APPROVAL_RE =
 	/^\s*(yes|yep|yeah|approve|approved|generate|ok|go|do it|let'?s go)\b/i;
 
+type Writer = Parameters<
+	Parameters<typeof createUIMessageStream>[0]["execute"]
+>[0]["writer"];
+
+// One short, readable line for the chat. The page shows it with a retry
+// button, so a network or API hiccup on stage is one click to fix.
+function errorText(err: unknown) {
+	const raw = err instanceof Error ? err.message : String(err);
+	const line = raw.split("\n")[0].trim();
+	return line.length > 180 ? `${line.slice(0, 177)}…` : line;
+}
+
+function writeError(writer: Writer, message: string) {
+	writer.write({
+		type: "data-error",
+		id: `error-${crypto.randomUUID().slice(0, 6)}`,
+		data: { message },
+	});
+}
+
 export async function POST(req: Request) {
 	const body: Body = await req.json();
 	const { messages, backend = "workflow", threadId, resourceId } = body;
@@ -54,21 +74,12 @@ export async function POST(req: Request) {
 					writer.merge(agentStream);
 				} catch (err) {
 					console.error("[chat route] agent stream failed", err);
-					const id = crypto.randomUUID();
-					writer.write({ type: "text-start", id });
-					writer.write({
-						type: "text-delta",
-						id,
-						delta: `**agent error:** ${
-							err instanceof Error ? err.message : String(err)
-						}`,
-					});
-					writer.write({ type: "text-end", id });
+					writeError(writer, `agent failed: ${errorText(err)}`);
 				}
 			},
 			onError: (err) => {
 				console.error("[chat route] stream error (agent)", err);
-				return err instanceof Error ? err.message : "stream error";
+				return `agent failed: ${errorText(err)}`;
 			},
 		});
 
@@ -91,6 +102,25 @@ export async function POST(req: Request) {
 
 	const stream = createUIMessageStream({
 		execute: async ({ writer }) => {
+			// The step that is running now. If anything throws, this step is
+			// marked as failed, so the UI never shows a stuck spinner.
+			type StepRef = { id: string; step: number; label: string };
+			let running: StepRef | null = null;
+			let failedLabel: string | null = null;
+			const writeStep = (
+				id: string,
+				meta: { step: number; label: string },
+				status: "running" | "done" | "error",
+			) => {
+				writer.write({
+					type: "data-workflow-step",
+					id: `step-${id}`,
+					data: { step: meta.step, label: meta.label, status },
+				});
+				running = status === "running" ? { id, ...meta } : null;
+				if (status === "error") failedLabel = meta.label;
+			};
+
 			try {
 				const state = getWorkflowState(tid);
 				const priorValid = CVSchema.safeParse(state.draft).success;
@@ -108,25 +138,10 @@ export async function POST(req: Request) {
 					const cv = CVSchema.parse(state.draft);
 					emitUI({ type: "CVCard", props: cv });
 
-					writer.write({
-						type: "data-workflow-step",
-						id: "step-pdf",
-						data: {
-							step: 4,
-							label: "renderPdf() · plain code",
-							status: "running",
-						},
-					});
+					const pdfStep = { step: 4, label: "renderPdf() · plain code" };
+					writeStep("pdf", pdfStep, "running");
 					const pdf = await renderCVtoPdf(cv);
-					writer.write({
-						type: "data-workflow-step",
-						id: "step-pdf",
-						data: {
-							step: 4,
-							label: "renderPdf() · plain code",
-							status: "done",
-						},
-					});
+					writeStep("pdf", pdfStep, "done");
 
 					writer.write({
 						type: "file",
@@ -171,6 +186,7 @@ export async function POST(req: Request) {
 						| {
 								id?: string;
 								stepId?: string;
+								status?: string;
 								output?: unknown;
 								result?: unknown;
 						  }
@@ -180,30 +196,16 @@ export async function POST(req: Request) {
 
 					if (chunk.type === "workflow-step-start" && stepId) {
 						const meta = STEP_MAP[stepId];
-						if (meta) {
-							writer.write({
-								type: "data-workflow-step",
-								id: `step-${stepId}`,
-								data: {
-									step: meta.step,
-									label: meta.label,
-									status: "running",
-								},
-							});
-						}
+						if (meta) writeStep(stepId, meta, "running");
 					} else if (
 						(chunk.type === "workflow-step-result" ||
 							chunk.type === "workflow-step-finish") &&
 						stepId
 					) {
 						const meta = STEP_MAP[stepId];
-						if (meta) {
-							writer.write({
-								type: "data-workflow-step",
-								id: `step-${stepId}`,
-								data: { step: meta.step, label: meta.label, status: "done" },
-							});
-						}
+						const failed = payload?.status === "failed";
+						if (meta) writeStep(stepId, meta, failed ? "error" : "done");
+						if (failed) continue;
 						// Capture intermediate draft after merge for early preview.
 						if (stepId === "merge") {
 							const merged = (stepOutput as { merged?: typeof state.draft })
@@ -226,9 +228,13 @@ export async function POST(req: Request) {
 				}
 
 				// Fallback: if we didn't capture the final result from step events,
-				// read it from the finished stream.
+				// read it from the finished stream. A failed run throws here, and
+				// the catch below shows the error.
 				if (!finalResult) {
 					const done = await wfStream.result;
+					if (done.status === "failed") {
+						throw done.error ?? new Error("workflow run failed");
+					}
 					const raw = (done as { result?: unknown }).result as
 						| (CVWorkflowResult & Record<string, CVWorkflowResult | undefined>)
 						| undefined;
@@ -269,21 +275,17 @@ export async function POST(req: Request) {
 				setWorkflowState(tid, finalDraft);
 			} catch (err) {
 				console.error("[chat route] workflow failed", err);
-				const id = crypto.randomUUID();
-				writer.write({ type: "text-start", id });
-				writer.write({
-					type: "text-delta",
-					id,
-					delta: `**workflow error:** ${
-						err instanceof Error ? err.message : String(err)
-					}`,
-				});
-				writer.write({ type: "text-end", id });
+				const stuck = running as StepRef | null;
+				if (stuck) writeStep(stuck.id, stuck, "error");
+				writeError(
+					writer,
+					`${failedLabel ?? "workflow"} failed: ${errorText(err)}`,
+				);
 			}
 		},
 		onError: (err) => {
 			console.error("[chat route] stream error (workflow)", err);
-			return err instanceof Error ? err.message : "stream error";
+			return `workflow failed: ${errorText(err)}`;
 		},
 	});
 
