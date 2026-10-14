@@ -1,4 +1,7 @@
 @import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
 
 /* ─── design tokens (terminal theme) ─────────────────────── */
 :root {
@@ -18,6 +21,61 @@
 
 	--font-mono: var(--font-jetbrains-mono), ui-monospace, Menlo, Consolas, monospace;
 	--font-display: var(--font-space-grotesk), var(--font-jetbrains-mono), ui-monospace, monospace;
+
+	/* ─── shadcn tokens mapped to terminal palette ───────
+	   AI Elements (shadcn) read these via Tailwind utilities
+	   (bg-primary, text-muted-foreground, border, etc.). */
+	--background: var(--bg);
+	--foreground: var(--fg);
+	--card: var(--bg-2);
+	--card-foreground: var(--fg);
+	--popover: var(--bg-2);
+	--popover-foreground: var(--fg);
+	--primary: var(--accent);
+	--primary-foreground: var(--bg);
+	--secondary: var(--bg-3);
+	--secondary-foreground: var(--fg);
+	--muted: var(--bg-3);
+	--muted-foreground: var(--fg-dim);
+	--ui-accent: var(--bg-3);
+	--ui-accent-foreground: var(--fg);
+	--destructive: var(--danger);
+	--destructive-foreground: var(--bg);
+	--border: var(--line);
+	--input: var(--line);
+	--ring: var(--accent);
+	--radius: 4px;
+	--radius-sm: 2px;
+	--radius-md: 4px;
+	--radius-lg: 6px;
+}
+
+/* Expose shadcn tokens as Tailwind utility classes. */
+@theme inline {
+	--color-background: var(--background);
+	--color-foreground: var(--foreground);
+	--color-card: var(--card);
+	--color-card-foreground: var(--card-foreground);
+	--color-popover: var(--popover);
+	--color-popover-foreground: var(--popover-foreground);
+	--color-primary: var(--primary);
+	--color-primary-foreground: var(--primary-foreground);
+	--color-secondary: var(--secondary);
+	--color-secondary-foreground: var(--secondary-foreground);
+	--color-muted: var(--muted);
+	--color-muted-foreground: var(--muted-foreground);
+	--color-accent: var(--ui-accent);
+	--color-accent-foreground: var(--ui-accent-foreground);
+	--color-destructive: var(--destructive);
+	--color-destructive-foreground: var(--destructive-foreground);
+	--color-border: var(--border);
+	--color-input: var(--input);
+	--color-ring: var(--ring);
+	--font-sans: var(--font-mono);
+	--font-mono: var(--font-mono);
+	--radius-sm: var(--radius-sm);
+	--radius-md: var(--radius-md);
+	--radius-lg: var(--radius-lg);
 }
 
 [data-theme="light"] {
@@ -34,6 +92,20 @@
 * {
 	box-sizing: border-box;
 }
+
+/* Browser default focus ring is blue — recolor to terminal accent. */
+*:focus-visible {
+	outline: 2px solid var(--accent-dim);
+	outline-offset: 2px;
+	border-radius: 4px;
+}
+button:focus-visible,
+[role="button"]:focus-visible,
+textarea:focus-visible {
+	outline: none;
+	box-shadow: 0 0 0 2px var(--accent-dim);
+}
+
 html,
 body {
 	margin: 0;
@@ -345,39 +417,6 @@ body::before {
 	color: var(--accent);
 }
 
-/* Thinking indicator */
-.thinking {
-	display: inline-flex;
-	gap: 4px;
-	align-items: center;
-	color: var(--fg-dim);
-	font-size: 13px;
-}
-.thinking .d {
-	width: 5px;
-	height: 5px;
-	border-radius: 50%;
-	background: var(--accent);
-	animation: th 1.2s ease-in-out infinite;
-}
-.thinking .d:nth-child(2) {
-	animation-delay: 0.15s;
-}
-.thinking .d:nth-child(3) {
-	animation-delay: 0.3s;
-}
-@keyframes th {
-	0%,
-	100% {
-		opacity: 0.2;
-		transform: translateY(0);
-	}
-	50% {
-		opacity: 1;
-		transform: translateY(-2px);
-	}
-}
-
 /* Divider */
 .divider {
 	display: flex;
@@ -528,75 +567,28 @@ body::before {
 	color: var(--fg-dim);
 }
 
-/* Input bar */
+/* Input bar — wrap PromptInput. Shadcn tokens do the heavy lifting;
+   we only set the border-top divider and the leading ❯ marker. */
 .inputbar {
 	border-top: 1px solid var(--line);
 	background: var(--bg-3);
 	padding: 14px 20px;
-	display: grid;
-	grid-template-columns: auto 1fr auto;
-	gap: 14px;
+	display: flex;
 	align-items: center;
+	gap: 12px;
+	position: relative;
 }
-.inputbar .prompt {
+.inputbar::before {
+	content: "❯";
 	color: var(--accent);
 	font-family: var(--font-mono);
 	font-size: 14px;
 	font-weight: 600;
-}
-.inputbar textarea {
-	background: transparent;
-	border: none;
-	outline: none;
-	color: var(--fg);
-	font-family: var(--font-mono);
-	font-size: 14px;
-	line-height: 1.5;
-	resize: none;
-	padding: 2px 0;
-	min-height: 22px;
-	max-height: 120px;
-}
-.inputbar textarea::placeholder {
-	color: var(--fg-faint);
-}
-.inputbar .send {
-	appearance: none;
-	background: var(--accent);
-	color: var(--bg);
-	border: none;
-	font-family: var(--font-mono);
-	font-size: 11px;
-	font-weight: 600;
-	letter-spacing: 0.18em;
-	text-transform: uppercase;
-	padding: 8px 14px;
-	border-radius: 4px;
-	cursor: pointer;
-	display: inline-flex;
-	align-items: center;
-	gap: 8px;
-	transition: opacity 120ms ease, transform 120ms ease;
-}
-.inputbar .send:hover {
-	opacity: 0.85;
-}
-.inputbar .send:active {
-	transform: translateY(1px);
-}
-.inputbar .send:disabled {
-	opacity: 0.4;
-	cursor: not-allowed;
-}
-.inputbar .send .kbd {
-	font-size: 9px;
-	padding: 2px 5px;
-	background: rgba(0, 0, 0, 0.2);
-	border-radius: 2px;
-	letter-spacing: 0.1em;
+	flex-shrink: 0;
 }
 
-/* Suggestions */
+/* Suggestions layout — let rows wrap. Chip visuals come from
+   shadcn button variant="outline" now that tokens are wired. */
 .suggestions {
 	display: flex;
 	gap: 8px;
@@ -605,21 +597,11 @@ body::before {
 	border-top: 1px solid var(--line);
 }
 .suggestions .chip {
-	appearance: none;
-	background: var(--bg-2);
-	border: 1px solid var(--line);
-	color: var(--fg-dim);
 	font-family: var(--font-mono);
 	font-size: 12px;
-	padding: 6px 10px;
-	border-radius: 4px;
-	cursor: pointer;
-	transition: all 120ms ease;
-}
-.suggestions .chip:hover {
-	color: var(--fg);
-	border-color: var(--accent-dim);
-	background: var(--accent-faint);
+	font-weight: normal;
+	letter-spacing: normal;
+	text-transform: none;
 }
 .suggestions .chip::before {
 	content: "> ";
