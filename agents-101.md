@@ -4,10 +4,10 @@
 
 | | |
 |---|---|
-| **Version** | `2026.10.14-3532785` |
+| **Version** | `2026.10.14-5aaa2d6` |
 | **State** | Branch `talk-texts`, **not merged to `main` yet** — the published deck is older. |
-| **Format** | 20 min · live demo · 19 slides |
-| **Speaker notes** | 1820 words ≈ 15:15 at 120 wpm (budget 19 min) |
+| **Format** | 20 min · live demo · 20 slides |
+| **Speaker notes** | 1842 words ≈ 15:26 at 120 wpm (budget 19 min) |
 | **Slides** | https://beshkenadze.github.io/agents-101/ |
 | **Code** | https://github.com/beshkenadze/agents-101 |
 
@@ -24,8 +24,8 @@ Notes only — clicks, pauses and the live demo add time on top.
 | 02 · Structured output & tools | 7–9 | 2:57 | 4:00 |
 | 03 · Workflow vs. agent · orchestration | 10–11 | 1:37 | 2:00 |
 | 04 · Live demo — CV generator | 12–18 | 5:26 | 8:00 |
-| end · Wrap-up | 19–19 | 0:41 | 1:00 |
-| **Total** | 1–19 | **15:15** | **19:00** |
+| end · Wrap-up | 19–20 | 0:52 | 1:00 |
+| **Total** | 1–20 | **15:26** | **19:00** |
 
 ## Slides
 
@@ -47,7 +47,8 @@ Notes only — clicks, pauses and the live demo add time on top.
 - [16 · Demo — agent backend](#slide-16)
 - [17 · Working memory](#slide-17)
 - [18 · Render React in chat](#slide-18)
-- [19 · Wrap-up](#slide-19)
+- [19 · Next talk](#slide-19)
+- [20 · Wrap-up](#slide-20)
 
 ---
 
@@ -789,7 +790,27 @@ The CV card and the Yes/No card are real React components. The model never sends
 
 <a id="slide-19"></a>
 
-## 19 · Wrap-up
+## 19 · Next talk
+
+`/next` · notes: 22 words ≈ 0:11
+
+### On screen
+
+*coming next*
+
+##### Make Your Decision
+
+A talk about decision models.
+
+### Say
+
+And one more thing. My next talk is called "Make Your Decision". It's about decision models. I hope to see you there!
+
+---
+
+<a id="slide-20"></a>
+
+## 20 · Wrap-up
 
 `/wrap-up` · notes: 82 words ≈ 0:41
 
@@ -832,6 +853,7 @@ Changes to the slides, newest first.
 
 | Date | Commit | Change |
 |---|---|---|
+| 2026-10-14 | [`5aaa2d6`](https://github.com/beshkenadze/agents-101/commit/5aaa2d6) | slides: teaser for the next talk, Make Your Decision |
 | 2026-10-14 | [`3532785`](https://github.com/beshkenadze/agents-101/commit/3532785) | Second review pass: B2-level notes, slide fixes, readable inline code |
 | 2026-10-14 | [`01a69d6`](https://github.com/beshkenadze/agents-101/commit/01a69d6) | Wrap-up slide trimmed; README rewritten for people who scan the QR |
 | 2026-10-14 | [`85c98bf`](https://github.com/beshkenadze/agents-101/commit/85c98bf) | slides: demo chapter notes trimmed; stage directions marked as LIVE lines |
