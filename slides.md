@@ -468,16 +468,14 @@ class: 'center-v'
 
 <div class="section-num">§ 04 — DEMO</div>
 
-<h2 class="heading" style="font-size: 140px; line-height: 0.9;">Let's<br/>build<br/>a CV gen<span class="caret"></span></h2>
+<h2 class="heading" style="font-size: 140px; line-height: 0.9;">Let's<br/>run<br/>a CV gen<span class="caret"></span></h2>
 
 <p class="body" style="margin-top: 40px; font-size: 28px; max-width: 60ch; color: var(--fg-dim);">Same chat input. Two backends — workflow and agent. We compare.</p>
 
 <!--
-Okay, let's put this all together. I built a small app ahead of time. It is a chat where you describe yourself in free text. The app generates a CV as a PDF.
+Let's put it all together. I built a small chat app: you describe yourself in free text, and it makes a CV as a PDF.
 
-The twist: there are two different backends under the hood. One is a workflow — the steps we just talked about. The other is an agent — the loop we just talked about. A toggle switches between them. Same chat input. Same final PDF. Very different paths.
-
-Not "live coding" live. All the code is written already. What is live is the comparison. You will see both backends react to the same prompt in real time.
+Under the hood — two backends. One is a workflow, one is an agent. Same input, same result, different path. The code is ready — the live part is the comparison.
 -->
 
 ---
@@ -500,15 +498,13 @@ status: "§ two backends"
 </div>
 
 <!--
-Quick map before we open the app.
+A quick map. The chat sends the message to one API route. A flag picks the backend: workflow or agent.
 
-User types in the chat. Always the same chat. The request goes to one of two backends — workflow or agent — picked by a toggle in the UI. Both return the same CV object: name, headline, skills, jobs. The same Zod schema validates both.
+[click] The UI doesn't know which one ran — it gets the same events.
 
-[click] The UI does not know which backend ran. It gets the same streaming events either way — step updates, CV preview, confirm card. The same React components render both.
+[click] We switch with one flag in the request.
 
-[click] We switch with a flag in the request. backend = "workflow" or "agent". Nothing else changes. Same message. Same thread id.
-
-[click] The output shape is the same on purpose. That is the whole point. Same input going in. Same CV schema coming out. Very different internals. That is what makes the comparison honest. We are not comparing apples to oranges. We are comparing two ways to build the same contract.
+[click] And both return the same CV object, checked by the same Zod schema. Same contract, two ways to build it.
 -->
 
 ---
@@ -540,13 +536,11 @@ status: "§ input"
 <p class="body" style="margin-top: 28px; font-size: 22px;" v-click>Same input below. Watch how the two backends reach the same object differently.</p>
 
 <!--
-The input is free text. Not a form. Not a wizard. Not "paste your LinkedIn URL". Just a chat message, the way you would actually describe yourself.
+The input is just a chat message — the way you'd describe yourself to a person.
 
-For the demo I will paste something like this: "My name is Aleksandr. 20+ years in product architecture — LLM, AI, ML, zero-knowledge security. At Denovo: consulting for LegalTech and EdTech startups. Stack: TypeScript, Node, Tauri, Electron, on-device ML, LoRA fine-tuning."
+[click] The goal is a typed CV object: name, headline, skills, jobs.
 
-[click] The goal — a typed CV object. Name, headline, skills array, jobs array. Validated against the same Zod schema for both backends.
-
-[click] A small trick on stage. I will send a partial version first — leave out something obvious, like the company name. Then watch how each backend handles the missing field. That is where the two paths differ the most. Workflow hits a code branch and asks a scripted question. Agent runs its loop and decides on its own. Same outcome. Different mechanism. You will see it clearly.
+[click] One trick: on stage I'll leave out the company name. Then we watch how each backend handles the missing data. The workflow asks a question we wrote in code. The agent decides on its own.
 -->
 
 ---
@@ -581,40 +575,23 @@ export const cvWorkflow = createWorkflow({ id: "cv-workflow", inputSchema })
 </div>
 
 <!--
-Backend A — workflow. Let me walk through the code first, then we switch to the running app.
+Backend A — the workflow. Four steps, wired with Mastra's createWorkflow: extract, merge, validate, branch.
 
-Four named steps. We wire them with Mastra's createWorkflow. The chain: extract, merge, validate, branch.
+Extract is the only model call — gpt-6-luna, the cheapest model, reasoning off. Merge is plain code: it keeps what we already know. Validate checks the draft with Zod. Branch is plain code too: ask about the missing field, or show the CV.
 
-Extract is the only LLM call in the whole flow. One structured-output call on gpt-6-luna — the exact same extractDraft function the agent's tool uses. Cheap. Fast. Reasoning turned off. Returns a partial DraftCV — only the fields it could infer from the text.
+[click] One model call per turn.
 
-Merge is pure code. No model. New fields fill empty slots. Already-filled fields are never wiped. That is how state grows across turns.
+[click] A cheap model is enough for simple extraction.
 
-Validate runs the strict CVSchema through safeParse. Either passes, or returns the first missing field.
+[click] And every path is in our code — no surprises.
 
-Then branch. This is Mastra's .branch() primitive. The predicate is a boolean we computed in validate. Either askStep — pick a question for the missing field. Or readyStep — ask the user to confirm the PDF. The branch is a code switch. Not a model decision.
+>>> LIVE: toggle = workflow, new thread, paste the prompt without the company <<<
 
-[click] So per turn — one LLM call only. Everything else is code.
+Watch the steps: extract, merge, validate… and it asks: "Which company was that role at?"
 
-[click] gpt-6-luna is the point here. It is the smallest and cheapest model in the family. Mechanical extraction is exactly where cheap models shine. No reasoning needed, just "pull fields out of this text" — so we even switch reasoning off. A big model here would cost many times more with no measurable gain.
+>>> Reply "Denovo" → Yes on the card → open the PDF <<<
 
-[click] The branch is ours. We own every path. Nothing surprises you.
-
->>> LIVE — switch to the running app <<<
-
-In the chat, check that the toggle says "workflow". Start a new thread. Paste a partial prompt — leave out the company. Something like: "My name is Aleksandr, 20 years in product architecture, TypeScript and ML, consulting for LegalTech startups." Send.
-
-Watch the numbered step blocks appear in order.
-
-Extract — point at it: "one LLM call, gpt-6-luna, returns a DraftCV".
-Merge — "pure code, keeping the fields we already have".
-Validate — "Zod safeParse, fails because company is missing".
-ask-field — "code branch picked the question".
-
-The bot asks "Which company was that at?". Reply "Denovo LLC". Send. Same chain runs again. Extract, merge, validate — this time validate passes. Branch takes readyStep. CV preview card appears. Confirm card with Yes/No.
-
-Click Yes. PDF renders. Download link appears. Open it. There is the CV.
-
-Recap on stage. Every step was visible. Every step was our code. One LLM call per turn. If something had broken, I could point at the exact step.
+Every step was visible, and every step was our code.
 -->
 
 ---
@@ -650,37 +627,27 @@ export const cvAgent = new Agent({
 </div>
 
 <!--
-Backend B — agent. Same task. Same CV shape. Completely different structure.
+Backend B — the agent. Same task, but no steps. Just instructions, tools and memory.
 
-No steps wired by us. Three things: instructions, tools, memory.
+The instructions say: extract, validate, confirm, generate. And one rule: never make the PDF without the user's approval. That's only a line in a prompt — a soft guardrail. The hard one is in code: generatePdf only accepts a complete, valid CV.
 
-The instructions are the agent's job description. Extract fields. Validate them. Confirm with the user. Generate the PDF. And one rule: never call generatePdf without explicit approval. Be honest about what this is — a line in a prompt. A soft guardrail. The hard guardrail is in code: generatePdf's inputSchema is the strict CVSchema, so the agent physically cannot render a CV with missing fields, no matter what it decides.
+Five tools — four do the same jobs as the workflow steps. The fifth is web search: the agent may use it to check a company name. Or may not. It decides.
 
-Five tools. Four overlap with the workflow. extractMetadata — same one-shot extractor. validateCV — same Zod safeParse. askConfirmation — renders a Yes/No card. generatePdf — renders the file. One extra: webSearch via Firecrawl. It is there if the agent decides it needs to check a company name. Only fires if the agent decides. That word matters.
+[click] The agent picks the order. No branch in our code.
 
-Memory — per-thread working memory with a Zod schema. We will dig into it on the next slide. For now, know this: the draft survives across turns.
+[click] Same CV shape as the workflow.
 
-[click] The agent picks the tool order. There is no .branch() in our code. The state machine lives in the instructions — the prompt — not in createWorkflow.
+[click] Web search is optional — the model decides.
 
-[click] Same output shape as the workflow. validateCV runs the same CVSchema. The CV card uses the same Zod type. The PDF template is the same file.
+[click] The price: more model calls, and more variance.
 
-[click] webSearch is opt-in. The model decides when. Well-known company — maybe skip. Something ambiguous — maybe fire. You cannot predict this. That is the point. That is agent judgement.
+>>> LIVE: toggle = agent, new thread, same prompt <<<
 
-[click] The price: more LLM calls per turn. The agent reads the tool list every step. Also more variance — same input twice, tool order can differ, timing differs. This is the trade-off slide from Block 1, made concrete.
+Look at the tool calls: extract, save to memory, validate… It finds the missing company and asks for it.
 
->>> LIVE — flip the toggle to agent <<<
+>>> Reply "Denovo" → point at webSearch if it fires → Yes → PDF <<<
 
-Flip the backend toggle in the UI to "agent". Start a fresh thread — memory is per-thread, we want a clean slate. Send the same partial prompt.
-
-Watch the tool blocks stream in. extractMetadata fires — same as workflow's extract. Then updateWorkingMemory — that is Mastra saving the draft into memory. Then validateCV — this time the agent is calling Zod via a tool, not us calling Zod in code. Issue comes back.
-
-The agent decides what to do with the issue. Sometimes it writes a text question directly. Sometimes it calls askConfirmation. Not deterministic. That is the point.
-
-Reply "Denovo LLC". Here is where it gets interesting. Watch for webSearch to fire. The agent may google "Denovo LLC" to check the company name. Sometimes it does. Sometimes it does not. If it does — point at the search results on screen.
-
-Then extractMetadata again with the new message. updateWorkingMemory. validateCV — passes now. askConfirmation — Yes/No card. Click Yes. generatePdf. Same PDF output as backend A.
-
-Key point to call out live. Same input. Same final PDF. But you saw the agent take a different path. More tool calls. Maybe a web search. More tokens on the meter. That is the cost of flexibility, made visible.
+Same input, same PDF — but a different path. More tool calls, more tokens. That's the price of flexibility.
 -->
 
 ---
@@ -724,19 +691,17 @@ export const memory = new Memory({
 <p class="body" style="margin-top: 24px;" v-click="4">Same <code>DraftCVSchema</code> the workflow uses. <span style="color: var(--accent)">One Zod schema, three call-sites — and one more on the next slide.</span></p>
 
 <!--
-One more thing. It ties the whole demo together — working memory.
+How did the agent remember the name between messages? Working memory.
 
-An agent is not just a tool loop. It has state across turns. Mastra gives you this out of the box with the Memory class on the right. Storage can be SQLite, LibSQL, Postgres — whatever. The interesting part is workingMemory. You enable it. You pass a Zod schema. The same DraftCVSchema we use everywhere. Mastra takes the current value and injects it into the prompt at every turn. The agent calls the built-in updateWorkingMemory tool to write changes back.
+Mastra keeps a draft for each conversation, with the same Zod schema. It gives the draft to the model every turn, and the agent updates it with a built-in tool.
 
-What this gives you, concretely:
+[click] Turn one: name and skills.
 
-[click] Turn 1. User says "I'm Aleksandr, TypeScript and ML, consulted for legaltech". Agent extracts. Name lands. Skills land. Headline lands. Memory now has those three fields. Jobs is still empty.
+[click] Turn two: only the new data — the company.
 
-[click] Turn 2. User says "at Denovo as consultant since 2024". Agent reads memory. Sees name and skills are already there. Does NOT re-extract them. Pulls only what is new — the jobs info. Writes memory with jobs added. Name and skills untouched. This is the difference between an agent that feels dumb — "wait, what was your name?" — and one that feels coherent.
+[click] Turn three: "yes" — it reads the full draft and makes the PDF.
 
-[click] Turn 3. User says "yes, generate". Agent reads memory. Validates the full CV. Calls generatePdf. Done.
-
-[click] The point that matters most. The same Zod schema is used in three places. Workflow's extract step. Agent's validateCV tool. Mastra's memory config. One source of truth, three call sites. That discipline is what keeps the two backends from drifting apart. Without a shared schema, the workflow would accept CVs the agent rejects. With it, the contract is enforced by the type system.
+[click] And it's the same schema the workflow uses. One schema keeps both backends in sync.
 -->
 
 ---
@@ -790,23 +755,17 @@ outputSchema: z.object({
 <p class="body" style="margin-top: 24px;" v-click="4"><span style="color: var(--accent)">One Zod schema, four call-sites.</span> extract · memory · validate · render.</p>
 
 <!--
-Since this is HelsinkiJS — one minute on the frontend side.
+Since this is HelsinkiJS — one minute on the frontend.
 
-The CV card and the Yes/No card you saw in the demo — both rendered via json-render. No innerHTML. No raw HTML from the model.
+The CV card and the Yes/No card are real React components. The model never sends HTML. A tool returns a small spec — a component name and its props — and React renders it.
 
-The flow is simple. Each tool has two jobs now. Do the work, and return a ui spec that says which component to render. askConfirmation returns ui.type "ConfirmCard". validateCV on success returns ui.type "CVCard". Same pattern in every tool that wants to draw something.
+[click] validateCV returns a CVCard.
 
-On the frontend, we walk through the tool outputs. For any output with a ui field, we pass it to Renderer. The catalog maps type names to React components. Registry provides the actual components. No switch logic on the frontend.
+[click] askConfirmation returns a ConfirmCard.
 
-[click] validateCV returns a CVCard spec when the draft passes CVSchema. The CV preview appears as soon as validation succeeds.
+[click] An unknown type renders nothing. Safe by default.
 
-[click] askConfirmation returns a ConfirmCard spec. Yes/No buttons, typed props, same Renderer.
-
-[click] If the model returns a type that is not in the catalog — nothing renders. No error. No crash. Safe by design.
-
-[click] So the agent picks the component by picking the tool. That is generative UI with a safety rail. And our Zod schema now has four call-sites — extract, memory, validate, render. One source of truth from the LLM output all the way down to React props.
-
-Honest note: we have two components registered for this talk. Register more and the agent can pick from a bigger palette. The mechanism is ready.
+[click] So the agent picks the component by picking the tool. Same Zod schema — all the way down to React props.
 -->
 
 ---
