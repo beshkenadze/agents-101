@@ -4,7 +4,7 @@
 
 | | |
 |---|---|
-| **Version** | `2026.10.14-5aaa2d6` |
+| **Version** | `2026.10.14-12beb13` |
 | **State** | Branch `talk-texts`, **not merged to `main` yet** — the published deck is older. |
 | **Format** | 20 min · live demo · 20 slides |
 | **Speaker notes** | 1842 words ≈ 15:26 at 120 wpm (budget 19 min) |
@@ -617,11 +617,11 @@ Extract is the only model call. It uses gpt-6-luna — the cheapest model, with 
 
 **[click]** And every path is in our code — no surprises.
 
-**▶ LIVE: ⌘K (new conversation) → click the badge to "mode: workflow" → click the first suggestion → Enter**
+**▶ LIVE: ⌘K (new conversation) → click the badge to "mode: workflow" → click the suggestion (it sends)**
 
 Look at the steps: extract, merge, validate… and it asks: "Which company was that role at?"
 
-**▶ Click "The company is Denovo." → Enter → Yes on the card → open the PDF**
+**▶ Click "The company is Denovo." → Yes on the card → open the PDF**
 
 Every step was visible, and every step was our code.
 
@@ -671,11 +671,11 @@ There are five tools. Four of them do the same jobs as the workflow steps. The f
 
 **[click]** The price: more model calls, and less predictable results.
 
-**▶ LIVE: ⌘K (new conversation, starts in "mode: agent") → click the first suggestion → Enter**
+**▶ LIVE: ⌘K (new conversation, starts in "mode: agent") → click the suggestion (it sends)**
 
 Look at the tool calls: extract, save to memory, validate… It finds the missing company and asks for it.
 
-**▶ Click "The company is Denovo." → Enter → point at webSearch if it runs → Yes → PDF**
+**▶ Click "The company is Denovo." → point at webSearch if it runs → Yes on the card → open the PDF**
 
 Same input, same PDF — but a different path. More tool calls, more tokens. This is the price of flexibility.
 
@@ -853,6 +853,7 @@ Changes to the slides, newest first.
 
 | Date | Commit | Change |
 |---|---|---|
+| 2026-10-14 | [`12beb13`](https://github.com/beshkenadze/agents-101/commit/12beb13) | demo: lock the mode badge per conversation, update stage directions |
 | 2026-10-14 | [`5aaa2d6`](https://github.com/beshkenadze/agents-101/commit/5aaa2d6) | slides: teaser for the next talk, Make Your Decision |
 | 2026-10-14 | [`3532785`](https://github.com/beshkenadze/agents-101/commit/3532785) | Second review pass: B2-level notes, slide fixes, readable inline code |
 | 2026-10-14 | [`01a69d6`](https://github.com/beshkenadze/agents-101/commit/01a69d6) | Wrap-up slide trimmed; README rewritten for people who scan the QR |
