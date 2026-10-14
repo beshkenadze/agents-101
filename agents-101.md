@@ -4,10 +4,10 @@
 
 | | |
 |---|---|
-| **Version** | `2026.10.14-c00195d` |
+| **Version** | `2026.10.14-d2727f4` |
 | **State** | Branch `talk-texts`, **not merged to `main` yet** — the published deck is older. |
 | **Format** | 20 min · live demo · 19 slides |
-| **Speaker notes** | 3449 words ≈ 28:48 at 120 wpm (budget 19 min) |
+| **Speaker notes** | 3177 words ≈ 26:32 at 120 wpm (budget 19 min) |
 | **Slides** | https://beshkenadze.github.io/agents-101/ |
 | **Code** | https://github.com/beshkenadze/agents-101 |
 
@@ -21,11 +21,11 @@ Notes only — clicks, pauses and the live demo add time on top.
 |---|---|---|---|
 | 00 · Intro & agenda | 1–2 | 1:16 ⚠️ | 1:00 |
 | 01 · Completion vs. agents | 3–6 | 2:49 | 3:00 |
-| 02 · Structured output & tools | 7–9 | 5:03 ⚠️ | 4:00 |
+| 02 · Structured output & tools | 7–9 | 2:47 | 4:00 |
 | 03 · Workflow vs. agent · orchestration | 10–11 | 3:16 ⚠️ | 2:00 |
 | 04 · Live demo — CV generator | 12–18 | 14:57 ⚠️ | 8:00 |
 | end · Wrap-up | 19–19 | 1:27 ⚠️ | 1:00 |
-| **Total** | 1–19 | **28:48** | **19:00** |
+| **Total** | 1–19 | **26:32** | **19:00** |
 
 ## Slides
 
@@ -160,7 +160,7 @@ Fine for a chat reply. But if the next step is code, a string is the wrong shape
 
 ### On screen
 
-*if you can draw the flowchart — ship it*
+*know the steps? ship a workflow*
 
 ##### Completion shines inside a workflow.
 
@@ -265,7 +265,7 @@ What you get is real — I've seen agents fix their own broken JSON, switch tool
 
 ## 07 · Structured output
 
-`/02-structured` · notes: 233 words ≈ 1:57
+`/02-structured` · notes: 135 words ≈ 1:08
 
 ### On screen
 
@@ -299,13 +299,13 @@ Works in workflows, in validation, inside agents — anywhere you need a predict
 
 ### Say
 
-Before we go deeper into agents, one more piece: structured output. Useful everywhere, not just with agents. Worth a pause.
+Before we go deeper — structured output. It's useful everywhere, not only in agents.
 
-When a model replies with free text, it is fine for chat. Useless for code. Your next step wants an object with named fields, not a paragraph to parse. In the AI SDK, it is the same generateText call — you just add an output option: Output.object with a Zod schema. You get a typed object back. (Older AI SDK versions had a separate generateObject function. It is deprecated now — if you see it in tutorials, this is the replacement.) No "please respond in JSON" prompt tricks. The SDK handles it.
+Free text is fine for chat, but your code needs an object with named fields. In the AI SDK it's the same generateText call — you add an output option: Output.object with a Zod schema. You get a typed object back. No "please answer in JSON" tricks. If you see generateObject in old tutorials — that's the old way, now deprecated.
 
-**[click]** This works everywhere. Inside a workflow step. As a validation pass. Inside an agent tool. Anywhere you need a predictable output shape. In our demo, the same pattern is used three times — workflow extract step, agent extractMetadata tool, and memory schema. One Zod schema, three call sites.
+**[click]** It works everywhere: a workflow step, validation, an agent tool. In our demo, one Zod schema is used in several places.
 
-**[click]** One honest gotcha: models still break JSON sometimes. Long outputs. Deep nesting. Edge cases. Some providers have a strict mode that guarantees valid JSON for the schema — use it when you can. When you can't, the standard fix is a repair pass. Either plug in a JSON fixer library, or send the broken output to a cheap model — like gpt-6-luna — whose only job is "parse this mess, return valid JSON". Two-stage repair. Boring and reliable.
+**[click]** But there is one problem: models sometimes break JSON. Some providers have a strict mode — use it if you can. If not, use a JSON fixer library, or send the broken output to a cheap model like gpt-6-luna to repair it.
 
 ---
 
@@ -313,7 +313,7 @@ When a model replies with free text, it is fine for chat. Useless for code. Your
 
 ## 08 · Tool calls are structured output
 
-`/02-structured/tool-call` · notes: 152 words ≈ 1:16
+`/02-structured/tool-call` · notes: 78 words ≈ 0:39
 
 ### On screen
 
@@ -327,17 +327,13 @@ The model doesn't *call* anything — it **asks** in JSON. Your code calls.
 
 ### Say
 
-One quick bridge before we talk tools. Structured output and tools are much closer than they look.
+One quick bridge. Structured output and tools are closer than they look.
 
-A tool call is structured output that your code runs. Same mechanism as Output.object. Same Zod engine. Same JSON. The only difference is what happens after.
+A tool call is just structured output. The model replies with JSON: "I want to call extractMetadata with this text". Your code finds the function, runs it, and sends the result back to the model.
 
-With structured output, you get an object. You use it.
+The model never calls anything. It can't — it only generates text. Your code does the real work.
 
-With a tool call, the model replies with JSON — "I want to call extractMetadata with this text". Your code looks up the function, runs it, and feeds the result back to the next model turn.
-
-The model never calls anything. It cannot. It is a text generator. All it does is predict the name of a tool and its arguments. Your code does the real work.
-
-**[click]** Once you see it this way, tools stop being magical. The model asks. Your code calls. Everything else — the loop, the retry, the tool selection — is runtime logic around this simple fact.
+**[click]** Once you see this, tools stop being magic. The model asks. Your code calls.
 
 ---
 
@@ -345,13 +341,13 @@ The model never calls anything. It cannot. It is a text generator. All it does i
 
 ## 09 · Tools
 
-`/02-tools` · notes: 220 words ≈ 1:50
+`/02-tools` · notes: 120 words ≈ 1:00
 
 ### On screen
 
 *now we're talking about agents*
 
-##### A tool is a function the model calls itself.
+##### A tool is a function the model can ask for.
 
 `tools/extract-metadata.ts`
 
@@ -381,19 +377,19 @@ The agent chooses *when* and *which* tool to call. You don't.
 
 ### Say
 
-Now tools. This is where agent behavior lives.
+Now tools — this is where agent behavior lives.
 
-A tool is a function the model can pick from a list. On the left is createTool from Mastra — real code from our demo. Five things: an id, a description, an input Zod schema, an output Zod schema, and an execute function. extractMetadata takes free-form text and returns a DraftCV. The model only sees the description and the schemas. Never the execute body. It decides from that.
+This is real code from the demo, with Mastra's createTool: an id, a description, input and output Zod schemas, and an execute function. The model never sees the execute body — only the description and the schemas.
 
-**[click]** The model reads the description. This is the most important part of a tool. Vague description — dead tool. The agent will not pick it. Good descriptions are one-liners: what it does, when to use it.
+**[click]** So the description is the most important part. A vague description — and the model never picks the tool.
 
-**[click]** The model decides if the tool fits the current task. Under the hood, this is a completion call with the tool list in the prompt. Nothing magic.
+**[click]** The model decides if the tool fits the task.
 
-**[click]** It fills the inputSchema — same Zod engine as structured output — with arguments it pulled from the conversation.
+**[click]** It fills the input schema with arguments from the conversation.
 
-**[click]** execute runs. The return value is fed back to the next model turn as "tool result". The loop continues.
+**[click]** Your code runs execute, and the result goes back to the model. The loop continues.
 
-**[click]** The key point: you do not call the tool. The agent decides when and which. You ship the schema and the execute body, and let go. This is the anxious part when you build your first agent. You wrote the code. But you are not calling it.
+**[click]** The key point: you don't call the tool. The agent decides when and which. You wrote the code — but you are not calling it.
 
 ---
 
@@ -881,6 +877,7 @@ Changes to the slides, newest first.
 
 | Date | Commit | Change |
 |---|---|---|
+| 2026-10-14 | [`d2727f4`](https://github.com/beshkenadze/agents-101/commit/d2727f4) | slides: chapter 02 notes trimmed; tool heading no longer says the model calls it |
 | 2026-10-14 | [`c00195d`](https://github.com/beshkenadze/agents-101/commit/c00195d) | slides: chapter 01 notes trimmed; intro mentions first English talk; 20+ years everywhere |
 | 2026-10-13 | [`09d5d5b`](https://github.com/beshkenadze/agents-101/commit/09d5d5b) | slides: shorter agenda notes; agenda ends with wrap-up |
 | 2026-10-12 | [`a3a70fe`](https://github.com/beshkenadze/agents-101/commit/a3a70fe) | slides: tighter intro notes; QR now points to the repo |
