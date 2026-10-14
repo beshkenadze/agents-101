@@ -36,6 +36,8 @@ class: 'center-v'
 <!--
 Hi! I'm Aleksandr. I've been an independent developer for more than 20 years.
 
+This is my first talk in English — so please be kind to me.
+
 You use AI agents every day — directly or indirectly. Maybe you've wondered how they are built.
 
 In the next 20 minutes we go from one simple API call to a working agent. Three building blocks: completion, structured output, and tools. Then we put them in a loop. That loop is what makes an agent.
@@ -106,17 +108,17 @@ const { text } = await generateText({
   prompt: "Rewrite my work experience nicely.",
 })
 
-// → "Aleksandr, 15+ years in product architecture, AI and privacy…"
+// → "Aleksandr, 20+ years in product architecture, AI and privacy…"
 ```
 
 <p class="body" style="margin-top: 32px; font-size: 22px;">Send a prompt. Get a string back. That's it.</p>
 
 <!--
-Let's start with the simplest thing. Completion is one call. You send a prompt, you get text back. That's the atomic unit of everything today.
+Let's start simple. Completion is one call: you send a prompt, you get text back.
 
-Here is the AI SDK version. We call generateText. We pass a model — gpt-6-sol here — and a prompt: "rewrite my work experience nicely". We get a string back.
+Here it is in the AI SDK — generateText. A model, a prompt: "rewrite my work experience nicely". We get a string. That's it.
 
-That is fine for a chat reply. But if the next step is code — building a CV object with fields — a free string is the wrong shape. You would have to parse it. Parsing LLM text is a losing game. We will fix that in two slides with structured output.
+Fine for a chat reply. But if the next step is code, a string is the wrong shape — you would have to parse it. We'll fix that soon with structured output.
 -->
 
 ---
@@ -144,19 +146,17 @@ status: "§ workflow"
 </div>
 
 <!--
-And this is fine. Completion is not old-fashioned. It is the right tool when the plan is known.
+And that's not a bad thing. Completion is the right tool when the plan is known.
 
-You pack it into a workflow. Step one extracts skills. Step two formats experience. Step three composes the result. You wire the steps. The model fills the blanks in each step.
+You put it in a workflow. Step one extracts skills. Step two formats experience. Step three builds the object. You wire the steps — the model fills the blanks.
 
-[click] It is predictable. Every step lives in your code, not in the model. The trace reads top to bottom, like a normal function.
+[click] Predictable — every step is in your code.
 
-[click] It is cheap. Fewer tokens per step. No tool-calling loop eating turns.
+[click] Cheap — fewer tokens, no loop.
 
-[click] It is easy to debug. Logs at every step. If step two produced garbage, you know where to look.
+[click] Easy to debug — if step two breaks, you know where to look.
 
-[click] And it is safe. No surprise tool calls. No off-task detours. The model cannot do anything you did not ask for.
-
-Rule of thumb: if you can split the task into fixed steps, completion in a workflow is enough. You do not need an agent for everything.
+[click] Safe — the model can't do anything you didn't ask for.
 -->
 
 ---
@@ -180,11 +180,11 @@ status: "§ agent loop"
 </div>
 
 <!--
-But sometimes it is different. You don't have a clean flowchart. You did not plan every case. Or you want the model to try something, see an error, and pick a different path. Without you scripting every retry.
+But sometimes there is no clear workflow. You can't plan every case. Or you want the model to try something, see an error, and try another way.
 
-This is where an agent appears. Same model. Same completion call under the hood. But wrapped in a loop, and given a set of tools. The model picks a tool. Looks at the result. Decides what to do next. Maybe calls another tool. Maybe answers. Over and over, until it is done.
+That's where an agent comes in. Same model, same call under the hood — but in a loop, with tools. The model picks a tool, looks at the result, and decides what's next. Again and again, until the task is done.
 
-[click] That loop is where the "agentic" behavior lives. The agent recovers from broken tool calls. It asks the user for missing info. It handles branches you did not plan. The model is still just predicting tokens. But the loop around it makes those predictions feel like decisions.
+[click] The model is still just predicting text. But the loop makes it feel like decisions.
 -->
 
 ---
@@ -222,13 +222,13 @@ status: "§ trade-offs"
 <p class="rule-center" v-click><span style="color: var(--accent)">Know your steps?</span> → workflow. &nbsp;·&nbsp; <span style="color: var(--warn)">Don't?</span> → agent. &nbsp;·&nbsp; Either way: <span style="color: var(--fg);">know the risks</span>.</p>
 
 <!--
-But this flexibility is not free. Let me be concrete.
+But this flexibility is not free.
 
-What you get is real. Agents do recover from broken tool calls. They do ask clarifying questions. They do handle paths you did not plan for. I have seen them fix JSON errors on their own, pick a different tool after a failure, ask the user for a missing date.
+What you get is real — I've seen agents fix their own broken JSON, switch tools after a failure, ask the user for a missing date.
 
-[click] What you pay. More tokens per turn — the model reads the tool list every step. Runs are hard to repeat: same input, different tool order, slightly different output. And this one matters most in production — an agent can ignore the rules in your prompt. A prompt is a request, not a lock. You ask it to format a CV. It sees the word "dollars". It decides to call your pricing API. Burns budget. Confuses the user. The same freedom that makes it adaptive makes it drift. So the rules that really matter — money, permissions, data — check them in code, not only in the prompt.
+[click] What you pay: more tokens, because the model reads the tool list on every step. Runs are hard to repeat — same input, different path. And the big one: an agent can ignore the rules in your prompt. A prompt is a request, not a lock. So the rules that really matter — money, permissions, data — check them in code.
 
-[click] Simple rule. Know the steps — workflow. Don't know — agent. Either way, know the risks. In the demo at the end, we run the same task through both. You will see the difference.
+[click] Simple rule: know the steps — workflow. Don't know — agent. In the demo we'll run the same task both ways.
 -->
 
 ---
@@ -533,7 +533,7 @@ status: "§ input"
 </div>
 <div class="tbody">
 <span class="line"><span class="prompt">user ▍</span> My name is Aleksandr.</span>
-<span class="line" style="padding-left: 84px;">15+ years in product architecture — LLM, AI, ML, zero-knowledge security.</span>
+<span class="line" style="padding-left: 84px;">20+ years in product architecture — LLM, AI, ML, zero-knowledge security.</span>
 <span class="line" style="padding-left: 84px;">At Denovo: consulting for LegalTech and EdTech startups.</span>
 <span class="line" style="padding-left: 84px;">Stack: TypeScript, Node, Tauri, Electron, on-device ML, LoRA fine-tuning.</span>
 <span class="line" style="margin-top: 18px;" v-click><span class="muted">── goal ──────────────────────────────</span></span>
@@ -546,7 +546,7 @@ status: "§ input"
 <!--
 The input is free text. Not a form. Not a wizard. Not "paste your LinkedIn URL". Just a chat message, the way you would actually describe yourself.
 
-For the demo I will paste something like this: "My name is Aleksandr. 15+ years in product architecture — LLM, AI, ML, zero-knowledge security. At Denovo: consulting for LegalTech and EdTech startups. Stack: TypeScript, Node, Tauri, Electron, on-device ML, LoRA fine-tuning."
+For the demo I will paste something like this: "My name is Aleksandr. 20+ years in product architecture — LLM, AI, ML, zero-knowledge security. At Denovo: consulting for LegalTech and EdTech startups. Stack: TypeScript, Node, Tauri, Electron, on-device ML, LoRA fine-tuning."
 
 [click] The goal — a typed CV object. Name, headline, skills array, jobs array. Validated against the same Zod schema for both backends.
 
@@ -605,7 +605,7 @@ Then branch. This is Mastra's .branch() primitive. The predicate is a boolean we
 
 >>> LIVE — switch to the running app <<<
 
-In the chat, check that the toggle says "workflow". Start a new thread. Paste a partial prompt — leave out the company. Something like: "My name is Aleksandr, 15 years in product architecture, TypeScript and ML, consulting for LegalTech startups." Send.
+In the chat, check that the toggle says "workflow". Start a new thread. Paste a partial prompt — leave out the company. Something like: "My name is Aleksandr, 20 years in product architecture, TypeScript and ML, consulting for LegalTech startups." Send.
 
 Watch the numbered step blocks appear in order.
 
