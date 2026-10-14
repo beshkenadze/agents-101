@@ -770,6 +770,24 @@ The CV card and the Yes/No card are real React components. The model never sends
 -->
 
 ---
+title: Next talk
+path: "/next"
+meta: "§ end · next talk"
+status: "coming next"
+class: 'center-v'
+---
+
+<div class="kicker">coming next</div>
+
+<h2 class="heading" style="font-size: 120px; line-height: 0.95;">Make Your<br/>Decision<span class="caret"></span></h2>
+
+<p class="lead" style="margin-top: 32px; font-size: 32px; color: var(--fg-dim);">A talk about decision models.</p>
+
+<!--
+And one more thing. My next talk is called "Make Your Decision". It's about decision models. I hope to see you there!
+-->
+
+---
 title: Wrap-up
 path: "/wrap-up"
 meta: "§ end · Q & A"
