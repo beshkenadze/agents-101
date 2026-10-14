@@ -26,9 +26,13 @@ bun run dev                  # http://localhost:3000
 no results, and everything else works.
 
 Click the **mode** badge at the top of the chat to switch between **agent**
-(the default) and **workflow**. Each page load is a new conversation, so reload
-the page before you switch. Try a message without a company name and see how
-each backend asks for it.
+(the default) and **workflow**. The badge locks after the first message, because
+one conversation uses one backend. Press **⌘K** (Ctrl+K) to start a new
+conversation.
+
+The chip above the input sends a sample message in one click. The first one has
+no company name, so you can see how each backend asks for it. The next chip
+answers the question.
 
 ## Where to look
 

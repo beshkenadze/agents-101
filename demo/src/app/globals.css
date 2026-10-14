@@ -260,6 +260,9 @@ body::before {
 	border-color: var(--accent-dim);
 	background: var(--accent-faint);
 }
+.tbar .mode-badge:disabled {
+	cursor: default;
+}
 .tbar .mode-badge .pill {
 	width: 6px;
 	height: 6px;

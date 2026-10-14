@@ -157,7 +157,14 @@ export default function ChatPage() {
 								type="button"
 								className="mode-badge"
 								data-mode={backend}
-								title="click to toggle backend"
+								// Locked after the first message: one conversation = one
+								// backend. ⌘K starts a new conversation.
+								disabled={messages.length > 0}
+								title={
+									messages.length > 0
+										? "⌘K for a new conversation"
+										: "click to toggle backend"
+								}
 								onClick={() =>
 									setBackend((b) => (b === "agent" ? "workflow" : "agent"))
 								}
