@@ -111,13 +111,13 @@ export async function POST(req: Request) {
 					writer.write({
 						type: "data-workflow-step",
 						id: "step-pdf",
-						data: { step: 4, label: "render PDF", status: "running" },
+						data: { step: 4, label: "renderPdf() · plain code", status: "running" },
 					});
 					const pdf = await renderCVtoPdf(cv);
 					writer.write({
 						type: "data-workflow-step",
 						id: "step-pdf",
-						data: { step: 4, label: "render PDF", status: "done" },
+						data: { step: 4, label: "renderPdf() · plain code", status: "done" },
 					});
 
 					writer.write({
@@ -141,11 +141,11 @@ export async function POST(req: Request) {
 				// Run one turn of the Mastra workflow: extract → merge → validate
 				// → branch(ask|ready). Map each step id to a numbered UI block.
 				const STEP_MAP: Record<string, { step: number; label: string }> = {
-					extract: { step: 1, label: "extract fields from message" },
-					merge: { step: 2, label: "merge into draft" },
-					validate: { step: 3, label: "validate draft" },
-					"ask-field": { step: 4, label: "pick next question" },
-					ready: { step: 4, label: "ready for PDF" },
+					extract: { step: 1, label: "extract() · LLM call" },
+					merge: { step: 2, label: "merge() · plain code" },
+					validate: { step: 3, label: "validate() · Zod" },
+					"ask-field": { step: 4, label: "branch → ask for missing field" },
+					ready: { step: 4, label: "branch → ready for PDF" },
 				};
 
 				let finalDraft = state.draft;
@@ -185,7 +185,7 @@ export async function POST(req: Request) {
 							writer.write({
 								type: "data-workflow-step",
 								id: `step-${stepId}`,
-								data: { step: meta.step, label: "", status: "done" },
+								data: { step: meta.step, label: meta.label, status: "done" },
 							});
 						}
 						// Capture intermediate draft after merge for early preview.

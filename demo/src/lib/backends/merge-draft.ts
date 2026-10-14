@@ -27,9 +27,13 @@ function mergeJobs(
 		if (j.role) byRole.set(j.role.toLowerCase(), j);
 	}
 	const result = [...prior];
+	// An answer like "The company is Denovo" comes back as a job with no role.
+	// It completes the first job that still has empty fields.
+	const firstIncomplete = () =>
+		result.find((j) => !j.company || !j.role || !j.years);
 	for (const nj of next) {
 		const key = nj.role?.toLowerCase() ?? "";
-		const existing = key ? byRole.get(key) : undefined;
+		const existing = key ? byRole.get(key) : firstIncomplete();
 		if (existing) {
 			Object.assign(existing, {
 				company: nj.company ?? existing.company,

@@ -22,17 +22,11 @@ type WorkflowStep = {
 	status: "running" | "done";
 };
 
-const STEP_LABELS: Record<number, string> = {
-	1: "extractSkills()",
-	2: "formatExperience()",
-	3: "assembleCV()",
-	4: "generatePdf()",
-};
-
+// Click a chip to fill the input. The first one has no company on purpose:
+// both backends must notice and ask for it.
 const SUGGESTIONS = [
-	"3 years React, last year lead at a startup",
-	"TypeScript + Node, some Python",
-	"Agency work before, now product",
+	"My name is Aleksandr. For two years I've worked as an AI consultant. Skills: TypeScript, Node, LLMs, on-device ML.",
+	"The company is Denovo.",
 ];
 
 function filePartName(url: string) {
@@ -182,8 +176,9 @@ export default function ChatPage() {
 
 						<div className="chat" ref={chatRef}>
 							<SystemLine role="// init">
-								session started · model: gpt-6-sol · tools: extractMetadata,
-								validateCV, askConfirmation, webSearch, generatePdf
+								{backend === "agent"
+									? "session started · agent · model: gpt-6-sol · tools: extractMetadata, validateCV, askConfirmation, webSearch, generatePdf"
+									: "session started · workflow · model: gpt-6-luna · steps: extract → merge → validate → branch"}
 							</SystemLine>
 							<AssistantLine>
 								Hey. Tell me about your work — skills, jobs, years — in plain
@@ -522,15 +517,14 @@ function MessageView({
 		output?: unknown;
 	};
 	// Tool blocks: skip tools whose output is rendered as a dedicated UI
-	// (askConfirmation → ConfirmCard, generatePdf → Attachment, validateCV →
-	// folded into CVCard render). Everything else shows as a generic block.
+	// (askConfirmation → ConfirmCard, generatePdf → Attachment). validateCV
+	// stays visible: the audience should see the agent calling validation.
 	const rawToolParts = message.parts.filter(
 		(p) =>
 			typeof p.type === "string" &&
 			p.type.startsWith("tool-") &&
 			p.type !== "tool-generatePdf" &&
-			p.type !== "tool-askConfirmation" &&
-			p.type !== "tool-validateCV",
+			p.type !== "tool-askConfirmation",
 	) as unknown as ToolPart[];
 	const toolById = new Map<string, ToolPart>();
 	rawToolParts.forEach((p, idx) => {
@@ -555,17 +549,9 @@ function MessageView({
 			{steps.map((s) => (
 				<ToolBlock
 					key={`step-${s.step}`}
-					title={`step ${s.step} · ${STEP_LABELS[s.step] ?? s.label}`}
+					title={`step ${s.step} · ${s.label}`}
 					done={s.status === "done"}
-					result={
-						s.status === "done"
-							? s.step === 4
-								? "pdf saved"
-								: s.step === 3
-									? "cv assembled"
-									: "ok"
-							: undefined
-					}
+					result={s.status === "done" ? "ok" : undefined}
 				/>
 			))}
 
