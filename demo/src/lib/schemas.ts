@@ -31,8 +31,9 @@ export const CVSchema = z.object({
 export type CV = z.infer<typeof CVSchema>;
 
 // ─── Draft view: everything optional ─────────────────────────
-// Derived from CVSchema; used by extractMetadata output and working memory.
-// A draft can grow turn-by-turn until CVSchema.safeParse passes.
+// Same fields as CVSchema, but every field may be null. Used by extraction
+// (both backends) and by the agent's working memory. A draft can grow
+// turn-by-turn until CVSchema.safeParse passes.
 
 // All fields nullable (not optional) so OpenAI strict-mode schemas list every
 // property in `required[]`. The agent / extractor returns `null` for unknown
@@ -75,14 +76,3 @@ export const UISpecSchema = z.discriminatedUnion("type", [
 
 export type UISpec = z.infer<typeof UISpecSchema>;
 
-// ─── Workflow-backend helpers ───────────────────────────────
-// The workflow path uses three discrete generateObject calls, each with its
-// own slice of CVSchema.
-
-export const SkillsSchema = z.object({
-	skills: z.array(z.string()).describe("Flat list of distinct skills"),
-});
-
-export const JobsSchema = z.object({
-	jobs: z.array(JobSchema),
-});

@@ -4,10 +4,10 @@
 
 | | |
 |---|---|
-| **Version** | `2026.10.14-01a69d6` |
+| **Version** | `2026.10.14-12beb13` |
 | **State** | Branch `talk-texts`, **not merged to `main` yet** — the published deck is older. |
-| **Format** | 20 min · live demo · 19 slides |
-| **Speaker notes** | 1675 words ≈ 14:01 at 120 wpm (budget 19 min) |
+| **Format** | 20 min · live demo · 20 slides |
+| **Speaker notes** | 1842 words ≈ 15:26 at 120 wpm (budget 19 min) |
 | **Slides** | https://beshkenadze.github.io/agents-101/ |
 | **Code** | https://github.com/beshkenadze/agents-101 |
 
@@ -19,13 +19,13 @@ Notes only — clicks, pauses and the live demo add time on top.
 
 | Section | Slides | Notes | Budget |
 |---|---|---|---|
-| 00 · Intro & agenda | 1–2 | 1:16 ⚠️ | 1:00 |
-| 01 · Completion vs. agents | 3–6 | 2:49 | 3:00 |
-| 02 · Structured output & tools | 7–9 | 2:47 | 4:00 |
-| 03 · Workflow vs. agent · orchestration | 10–11 | 1:32 | 2:00 |
-| 04 · Live demo — CV generator | 12–18 | 4:57 | 8:00 |
-| end · Wrap-up | 19–19 | 0:40 | 1:00 |
-| **Total** | 1–19 | **14:01** | **19:00** |
+| 00 · Intro & agenda | 1–2 | 1:22 ⚠️ | 1:00 |
+| 01 · Completion vs. agents | 3–6 | 3:12 ⚠️ | 3:00 |
+| 02 · Structured output & tools | 7–9 | 2:57 | 4:00 |
+| 03 · Workflow vs. agent · orchestration | 10–11 | 1:37 | 2:00 |
+| 04 · Live demo — CV generator | 12–18 | 5:26 | 8:00 |
+| end · Wrap-up | 19–20 | 0:52 | 1:00 |
+| **Total** | 1–20 | **15:26** | **19:00** |
 
 ## Slides
 
@@ -47,7 +47,8 @@ Notes only — clicks, pauses and the live demo add time on top.
 - [16 · Demo — agent backend](#slide-16)
 - [17 · Working memory](#slide-17)
 - [18 · Render React in chat](#slide-18)
-- [19 · Wrap-up](#slide-19)
+- [19 · Next talk](#slide-19)
+- [20 · Wrap-up](#slide-20)
 
 ---
 
@@ -55,7 +56,7 @@ Notes only — clicks, pauses and the live demo add time on top.
 
 ## 01 · Agents 101
 
-`/talks/agents-101` · notes: 118 words ≈ 0:59
+`/talks/agents-101` · notes: 129 words ≈ 1:05
 
 ### On screen
 
@@ -73,11 +74,11 @@ Hi! I'm Aleksandr. I've been an independent developer for more than 20 years.
 
 This is my first talk in English — so please be kind to me.
 
-You use AI agents every day — directly or indirectly. Maybe you've wondered how they are built.
+You use AI agents every day — directly or indirectly. Maybe you want to know how they are built.
 
-In the next 20 minutes we go from one simple API call to a working agent. Three building blocks: completion, structured output, and tools. Then we put them in a loop. That loop is what makes an agent.
+In the next 20 minutes, we go from one simple API call to a working agent. We will look at three building blocks: completion, structured output, and tools. Then we put them in a loop. This loop is what makes an agent.
 
-At the end — a live demo. A CV generator with two backends: a workflow and an agent. Same input, and we compare how they work. All the code is in the repo — QR code on the last slide.
+At the end, I'll show a live demo. It's a CV generator with two backends: a workflow and an agent. Same input — and we compare how they work. All the code is in the repo. The QR code is on the last slide.
 
 ---
 
@@ -119,7 +120,7 @@ Here is the plan.
 
 ## 03 · Completion
 
-`/01-completion` · notes: 69 words ≈ 0:35
+`/01-completion` · notes: 75 words ≈ 0:38
 
 ### On screen
 
@@ -144,11 +145,11 @@ Send a prompt. Get a string back. That's it.
 
 ### Say
 
-Let's start simple. Completion is one call: you send a prompt, you get text back.
+Let's start simple. Completion is one call. You send a prompt, and you get text back.
 
-Here it is in the AI SDK — generateText. A model, a prompt: "rewrite my work experience nicely". We get a string. That's it.
+Here it is in the AI SDK: generateText. We give it a model and a prompt: "Rewrite my work experience nicely." We get a string back. That's all.
 
-Fine for a chat reply. But if the next step is code, a string is the wrong shape — you would have to parse it. We'll fix that soon with structured output.
+This is fine for a chat. But if the next step is code, a string is not enough — you have to parse it. We will fix this soon with structured output.
 
 ---
 
@@ -156,7 +157,7 @@ Fine for a chat reply. But if the next step is code, a string is the wrong shape
 
 ## 04 · Completion in workflow
 
-`/01-completion/workflow` · notes: 78 words ≈ 0:39
+`/01-completion/workflow` · notes: 86 words ≈ 0:43
 
 ### On screen
 
@@ -175,17 +176,17 @@ Steps known in advance. You wire them. The model fills the blanks.
 
 ### Say
 
-And that's not a bad thing. Completion is the right tool when the plan is known.
+Completion is simple — and simple is good. It's the right tool when you know the plan.
 
-You put it in a workflow. Step one extracts skills. Step two formats experience. Step three builds the object. You wire the steps — the model fills the blanks.
+You put it in a workflow. Step one: extract the skills. Step two: format the experience. Step three: build the object. You connect the steps. The model fills in the blanks.
 
-**[click]** Predictable — every step is in your code.
+**[click]** It's predictable — every step is in your code.
 
-**[click]** Cheap — fewer tokens, no loop.
+**[click]** It's cheap — fewer tokens, no loop.
 
-**[click]** Easy to debug — if step two breaks, you know where to look.
+**[click]** It's easy to debug — if step two breaks, you know where to look.
 
-**[click]** Safe — the model can't do anything you didn't ask for.
+**[click]** And it's safe — the model can't do anything you didn't ask for.
 
 ---
 
@@ -193,7 +194,7 @@ You put it in a workflow. Step one extracts skills. Step two formats experience.
 
 ## 05 · When you need an agent
 
-`/01-completion/agent` · notes: 82 words ≈ 0:41
+`/01-completion/agent` · notes: 104 words ≈ 0:52
 
 ### On screen
 
@@ -213,9 +214,11 @@ It can recover from errors, ask for missing info, and handle scenarios you didn'
 
 But sometimes there is no clear workflow. You can't plan every case. Or you want the model to try something, see an error, and try another way.
 
-That's where an agent comes in. Same model, same call under the hood — but in a loop, with tools. The model picks a tool, looks at the result, and decides what's next. Again and again, until the task is done.
+This is where an agent comes in. It's the same model and the same call. But now it runs in a loop, and it has tools. A tool is just a function in your code — more about this soon.
 
-**[click]** The model is still just predicting text. But the loop makes it feel like decisions.
+The model picks a tool, looks at the result, and decides what to do next. Again and again, until the task is done.
+
+**[click]** The model still just predicts text. But the loop makes it look like it decides.
 
 ---
 
@@ -223,7 +226,7 @@ That's where an agent comes in. Same model, same call under the hood — but in 
 
 ## 06 · Agent trade-offs
 
-`/01-completion/trade-offs` · notes: 108 words ≈ 0:54
+`/01-completion/trade-offs` · notes: 117 words ≈ 0:59
 
 ### On screen
 
@@ -253,11 +256,11 @@ Know your steps? → workflow.  ·  Don't? → agent.  ·  Either way: know 
 
 But this flexibility is not free.
 
-What you get is real — I've seen agents fix their own broken JSON, switch tools after a failure, ask the user for a missing date.
+What you get is real. I've seen agents fix their own broken JSON, switch to another tool after an error, and ask the user for a missing date.
 
-**[click]** What you pay: more tokens, because the model reads the tool list on every step. Runs are hard to repeat — same input, different path. And the big one: an agent can ignore the rules in your prompt. A prompt is a request, not a lock. So the rules that really matter — money, permissions, data — check them in code.
+**[click]** What you pay: more tokens, because every step sends the whole conversation to the model again. It's hard to repeat a run — same input, different path. And the most important one: an agent can ignore the rules in your prompt. A prompt is a request, not a lock. So check important rules in code — money, permissions, data.
 
-**[click]** Simple rule: know the steps — workflow. Don't know — agent. In the demo we'll run the same task both ways.
+**[click]** A simple rule: you know the steps — use a workflow. You don't — use an agent. In the demo, we will run the same task both ways.
 
 ---
 
@@ -265,7 +268,7 @@ What you get is real — I've seen agents fix their own broken JSON, switch tool
 
 ## 07 · Structured output
 
-`/02-structured` · notes: 135 words ≈ 1:08
+`/02-structured` · notes: 143 words ≈ 1:12
 
 ### On screen
 
@@ -301,11 +304,13 @@ Works in workflows, in validation, inside agents — anywhere you need a predict
 
 Before we go deeper — structured output. It's useful everywhere, not only in agents.
 
-Free text is fine for chat, but your code needs an object with named fields. In the AI SDK it's the same generateText call — you add an output option: Output.object with a Zod schema. You get a typed object back. No "please answer in JSON" tricks. If you see generateObject in old tutorials — that's the old way, now deprecated.
+Free text is fine for a chat. But your code needs an object with fields. In the AI SDK, you use the same generateText call. You just add an output option: Output.object with a Zod schema. And you get a typed object back. No "please answer in JSON" tricks.
 
-**[click]** It works everywhere: a workflow step, validation, an agent tool. In our demo, one Zod schema is used in several places.
+In old tutorials, you may see generateObject. That's the old way — it's deprecated now.
 
-**[click]** But there is one problem: models sometimes break JSON. Some providers have a strict mode — use it if you can. If not, use a JSON fixer library, or send the broken output to a cheap model like gpt-6-luna to repair it.
+**[click]** It works everywhere: in a workflow step, in validation, in an agent tool. In our demo, we use the same Zod schemas in many places.
+
+**[click]** But there is one problem: models sometimes break JSON. Some providers have a strict mode — use it if you can. If not, use a JSON fixer library. Or send the broken output to a cheap model, like gpt-6-luna, to fix it.
 
 ---
 
@@ -327,13 +332,13 @@ The model doesn't *call* anything — it **asks** in JSON. Your code calls.
 
 ### Say
 
-One quick bridge. Structured output and tools are closer than they look.
+Structured output and tools are closer than they look.
 
-A tool call is just structured output. The model replies with JSON: "I want to call extractMetadata with this text". Your code finds the function, runs it, and sends the result back to the model.
+A tool call is just structured output. The model answers with JSON: "I want to call extractMetadata with this text." Your code finds the function, runs it, and sends the result back to the model.
 
-The model never calls anything. It can't — it only generates text. Your code does the real work.
+The model never calls anything. It can't — it only writes text. Your code does the real work.
 
-**[click]** Once you see this, tools stop being magic. The model asks. Your code calls.
+**[click]** When you see it like this, tools are not magic anymore. The model asks. Your code calls.
 
 ---
 
@@ -341,7 +346,7 @@ The model never calls anything. It can't — it only generates text. Your code d
 
 ## 09 · Tools
 
-`/02-tools` · notes: 120 words ≈ 1:00
+`/02-tools` · notes: 131 words ≈ 1:06
 
 ### On screen
 
@@ -353,13 +358,13 @@ The model never calls anything. It can't — it only generates text. Your code d
 
 ```ts
 export const extractMetadata = createTool({
-  id:           "extract-metadata",
-  description:  "Extract a draft CV from free-form user text.",
-  inputSchema:  z.object({ text: z.string() }),
+  id: "extract-metadata",
+  description: "Extract a draft CV from free text.",
+  inputSchema: z.object({ text: z.string() }),
   outputSchema: DraftCVSchema,
   execute: async ({ text }) => {
     const { output } = await generateText({
-      model:  openai("gpt-6-luna"), // cheap — structured extraction
+      model: openai("gpt-6-luna"), // cheap model
       output: Output.object({ schema: DraftCVSchema }),
       prompt: `Extract from: ${text}`,
     })
@@ -377,19 +382,19 @@ The agent chooses *when* and *which* tool to call. You don't.
 
 ### Say
 
-Now tools — this is where agent behavior lives.
+Now tools. This is where the agent behavior lives.
 
-This is real code from the demo, with Mastra's createTool: an id, a description, input and output Zod schemas, and an execute function. The model never sees the execute body — only the description and the schemas.
+This is simplified code from the demo, with createTool from Mastra. A tool has an id, a description, input and output schemas, and an execute function. The model never sees the execute function. It only sees the name, the description, and the input schema.
 
-**[click]** So the description is the most important part. A vague description — and the model never picks the tool.
+**[click]** So the description is the most important part. If it's not clear, the model may not pick the tool.
 
 **[click]** The model decides if the tool fits the task.
 
-**[click]** It fills the input schema with arguments from the conversation.
+**[click]** It fills the input schema with data from the conversation.
 
-**[click]** Your code runs execute, and the result goes back to the model. The loop continues.
+**[click]** Your code runs execute, and the result goes back to the model. Then the loop continues.
 
-**[click]** The key point: you don't call the tool. The agent decides when and which. You wrote the code — but you are not calling it.
+**[click]** The main point: the model decides when to call a tool, and which one. The framework runs it. You don't write this logic yourself.
 
 ---
 
@@ -397,7 +402,7 @@ This is real code from the demo, with Mastra's createTool: an id, a description,
 
 ## 10 · Workflow vs agent
 
-`/03-orchestration` · notes: 79 words ≈ 0:40
+`/03-orchestration` · notes: 84 words ≈ 0:42
 
 ### On screen
 
@@ -409,9 +414,9 @@ This is real code from the demo, with Mastra's createTool: an id, a description,
 
 ###### You wire the steps.
 
-- + Deterministic — you control each step
+- + Fixed order — you control each step
 - + Cheaper · easier to debug
-- + Human-in-the-loop can emulate agent-like behavior
+- + Can ask the user, like an agent
 
 > **Diagram:** Three fixed steps wired by you — [workflow-mini.svg](public/diagrams/workflow-mini.svg)
 
@@ -429,11 +434,11 @@ This is real code from the demo, with Mastra's createTool: an id, a description,
 
 So — two approaches, side by side.
 
-Workflow: you write the steps. You control everything, it's cheaper and easier to debug. And a workflow can still talk to the user — it pauses, asks a question, and continues. That's human-in-the-loop, and our workflow backend does exactly this.
+Workflow: you write the steps. You control everything. It's cheaper and easier to debug. And a workflow can still talk to the user: it stops, asks a question, and continues. This is called human-in-the-loop. Our workflow backend does exactly this.
 
-**[click]** Agent: you give it a goal and tools, and it finds the way. More flexible — but it can drift.
+**[click]** Agent: you give it a goal and some tools, and it finds the way. It's more flexible — but it can go off track.
 
-You don't need an agent everywhere. Often a workflow with one smart step is enough.
+You don't need an agent everywhere. Often, a workflow with one smart step is enough.
 
 ---
 
@@ -441,11 +446,11 @@ You don't need an agent everywhere. Often a workflow with one smart step is enou
 
 ## 11 · Orchestration patterns
 
-`/03-orchestration/patterns` · notes: 103 words ≈ 0:52
+`/03-orchestration/patterns` · notes: 109 words ≈ 0:55
 
 ### On screen
 
-*one agent is rarely enough*
+*when one agent is not enough*
 
 ##### Three ways to compose.
 
@@ -473,19 +478,19 @@ Reads the request, hands it to the right specialist. Doesn't execute.
 
 > **Diagram:** A router sends the request to a code agent or a text agent — [router.svg](public/diagrams/router.svg)
 
-In real life you mix them: a workflow step that is an agent with a supervisor inside.
+In real life you mix them: a workflow where one step is a supervisor with a few agents.
 
 ### Say
 
-Sometimes one agent is not enough. Three common patterns.
+Sometimes one agent is not enough. Here are three common patterns.
 
-Supervisor: one lead agent splits the task and gives parts to other agents — like a manager with a team.
+Supervisor: one main agent splits the task and gives parts to other agents. Like a manager with a team.
 
-Swarm: no boss. An agent works until it sees "this is not my job" — then it hands control to another agent. Think of a support bot: triage, then billing, then tech support.
+Swarm: there is no boss. An agent works until it sees "this is not my job". Then it passes the work to another agent. For example, a support bot: first-line support, then billing, then tech support.
 
 Router: it only reads the request and sends it to the right agent. It does no work itself.
 
-**[click]** In real life you mix them — for example, a workflow where one step is a supervisor with a few agents. Pick what fits your task.
+**[click]** In real life, you mix them. For example, a workflow where one step is a supervisor with a few agents. Choose what fits your task.
 
 ---
 
@@ -493,7 +498,7 @@ Router: it only reads the request and sends it to the right agent. It does no wo
 
 ## 12 · Demo — CV generator
 
-`/demo/cv-generator` · notes: 54 words ≈ 0:27
+`/demo/cv-generator` · notes: 57 words ≈ 0:29
 
 ### On screen
 
@@ -505,9 +510,9 @@ Same chat input. Two backends — workflow and agent. We compare.
 
 ### Say
 
-Let's put it all together. I built a small chat app: you describe yourself in free text, and it makes a CV as a PDF.
+Now let's put it all together. I built a small chat app. You describe yourself in plain text, and it makes a CV as a PDF.
 
-Under the hood — two backends. One is a workflow, one is an agent. Same input, same result, different path. The code is ready — the live part is the comparison.
+It has two backends. One is a workflow, and one is an agent. Same input, same result — but a different path. The code is ready. The live part is the comparison.
 
 ---
 
@@ -515,7 +520,7 @@ Under the hood — two backends. One is a workflow, one is an agent. Same input,
 
 ## 13 · Demo architecture
 
-`/demo/architecture` · notes: 60 words ≈ 0:30
+`/demo/architecture` · notes: 64 words ≈ 0:32
 
 ### On screen
 
@@ -525,17 +530,17 @@ Under the hood — two backends. One is a workflow, one is an agent. Same input,
 
 > **Diagram:** Chat UI posts to one API route, which runs either the workflow or the agent; both return the same CV object — [demo-architecture.svg](public/diagrams/demo-architecture.svg)
 
- `UI doesn't know which backend ran`   `we switch with a flag`   `same CV shape either way`
+ `same cards either way`   `we switch with a flag`   `same CV shape either way`
 
 ### Say
 
-A quick map. The chat sends the message to one API route. A flag picks the backend: workflow or agent.
+Here is a quick map. The chat sends a message to one API route. A flag picks the backend: workflow or agent.
 
-**[click]** The UI doesn't know which one ran — it gets the same events.
+**[click]** Both backends show the same CV card and the same Yes/No card.
 
-**[click]** We switch with one flag in the request.
+**[click]** We switch them with one flag in the request.
 
-**[click]** And both return the same CV object, checked by the same Zod schema. Same contract, two ways to build it.
+**[click]** And both return the same CV object, checked by the same Zod schema. Same contract — two ways to build it.
 
 ---
 
@@ -543,7 +548,7 @@ A quick map. The chat sends the message to one API route. A flag picks the backe
 
 ## 14 · Demo input
 
-`/demo/chat` · notes: 61 words ≈ 0:31
+`/demo/chat` · notes: 60 words ≈ 0:30
 
 ### On screen
 
@@ -560,15 +565,15 @@ user ▍ My name is Aleksandr.
  ── goal ──────────────────────────────  
  output: a structured CV { name, headline, skills\[\], jobs\[\] }  
 
-Same input below. Watch how the two backends reach the same object differently.
+We send this to both backends — and watch how each one gets there.
 
 ### Say
 
-The input is just a chat message — the way you'd describe yourself to a person.
+The input is just a chat message — like you would describe yourself to a person.
 
-**[click]** The goal is a typed CV object: name, headline, skills, jobs.
+**[click]** The goal is a typed CV object: name, headline, skills, and jobs.
 
-**[click]** One trick: on stage I'll leave out the company name. Then we watch how each backend handles the missing data. The workflow asks a question we wrote in code. The agent decides on its own.
+**[click]** One trick: I will leave out the company name. Then we see how each backend handles missing data. The workflow asks a question that we wrote in code. The agent decides by itself.
 
 ---
 
@@ -576,7 +581,7 @@ The input is just a chat message — the way you'd describe yourself to a person
 
 ## 15 · Demo — workflow backend
 
-`/demo/workflow.ts` · notes: 103 words ≈ 0:52
+`/demo/workflow.ts` · notes: 115 words ≈ 0:58
 
 ### On screen
 
@@ -602,21 +607,21 @@ export const cvWorkflow = createWorkflow({ id: "cv-workflow", inputSchema })
 
 ### Say
 
-Backend A — the workflow. Four steps, wired with Mastra's createWorkflow: extract, merge, validate, branch.
+Backend A — the workflow. It has four steps, connected with createWorkflow from Mastra: extract, merge, validate, and branch.
 
-Extract is the only model call — gpt-6-luna, the cheapest model, reasoning off. Merge is plain code: it keeps what we already know. Validate checks the draft with Zod. Branch is plain code too: ask about the missing field, or show the CV.
+Extract is the only model call. It uses gpt-6-luna — the cheapest model, with reasoning turned off. Merge is plain code: it keeps what we already know. Validate checks the draft with Zod. Branch is also plain code: it asks about the missing field, or it shows the CV.
 
-**[click]** One model call per turn.
+**[click]** So, one model call per message.
 
 **[click]** A cheap model is enough for simple extraction.
 
 **[click]** And every path is in our code — no surprises.
 
-**▶ LIVE: reload the page (new thread) → click the badge to "mode: workflow" → paste the prompt without the company**
+**▶ LIVE: ⌘K (new conversation) → click the badge to "mode: workflow" → click the suggestion (it sends)**
 
-Watch the steps: extract, merge, validate… and it asks: "Which company was that role at?"
+Look at the steps: extract, merge, validate… and it asks: "Which company was that role at?"
 
-**▶ Reply "Denovo" → Yes on the card → open the PDF**
+**▶ Click "The company is Denovo." → Yes on the card → open the PDF**
 
 Every step was visible, and every step was our code.
 
@@ -626,7 +631,7 @@ Every step was visible, and every step was our code.
 
 ## 16 · Demo — agent backend
 
-`/demo/agent.ts` · notes: 154 words ≈ 1:17
+`/demo/agent.ts` · notes: 183 words ≈ 1:32
 
 ### On screen
 
@@ -652,27 +657,27 @@ export const cvAgent = new Agent({
 
 ### Say
 
-Backend B — the agent. Same task, but no steps. Just instructions, tools and memory.
+Backend B — the agent. Same task, but no steps. Only instructions, tools, and memory.
 
-The instructions say: extract, validate, confirm, generate. And one rule: never make the PDF without the user's approval. That's only a line in a prompt — a soft guardrail. The hard one is in code: generatePdf only accepts a complete, valid CV.
+The instructions say: extract, validate, confirm, and generate. And one rule: never make the PDF without the user's approval. But this is only a line in a prompt — a soft guardrail. The hard guardrail is in code: generatePdf only accepts a complete, valid CV. In a real app, I would check the approval in code too.
 
-Five tools — four do the same jobs as the workflow steps. The fifth is web search: the agent may use it to check a company name. Or may not. It decides.
+There are five tools. Four of them do the same jobs as the workflow steps. The fifth one is web search. The agent may use it to check a company name. Or it may not. It decides.
 
-**[click]** The agent picks the order. No branch in our code.
+**[click]** The agent chooses the order. There is no branch in our code.
 
-**[click]** Same CV shape as the workflow.
+**[click]** The CV has the same shape as in the workflow.
 
 **[click]** Web search is optional — the model decides.
 
-**[click]** The price: more model calls, and more variance.
+**[click]** The price: more model calls, and less predictable results.
 
-**▶ LIVE: reload the page (new thread, starts in "mode: agent") → paste the same prompt**
+**▶ LIVE: ⌘K (new conversation, starts in "mode: agent") → click the suggestion (it sends)**
 
 Look at the tool calls: extract, save to memory, validate… It finds the missing company and asks for it.
 
-**▶ Reply "Denovo" → point at webSearch if it fires → Yes → PDF**
+**▶ Click "The company is Denovo." → point at webSearch if it runs → Yes on the card → open the PDF**
 
-Same input, same PDF — but a different path. More tool calls, more tokens. That's the price of flexibility.
+Same input, same PDF — but a different path. More tool calls, more tokens. This is the price of flexibility.
 
 ---
 
@@ -680,7 +685,7 @@ Same input, same PDF — but a different path. More tool calls, more tokens. Tha
 
 ## 17 · Working memory
 
-`/demo/working-memory` · notes: 81 words ≈ 0:41
+`/demo/working-memory` · notes: 85 words ≈ 0:43
 
 ### On screen
 
@@ -705,24 +710,24 @@ export const memory = new Memory({
 Mastra injects the current draft into every turn. Agent writes it back via `updateWorkingMemory`.
 
 - + Turn 1 fills `name`, `skills`
-- + Turn 2 fills `jobs` — turn 1 is remembered
+- + Turn 2 fills the missing company — turn 1 is remembered
 - + Turn 3 confirms — agent reads memory, calls `generatePdf`
 
-Same `DraftCVSchema` the workflow uses. One Zod schema, three call-sites — and one more on the next slide.
+Same `DraftCVSchema` the workflow uses.
 
 ### Say
 
-How did the agent remember the name between messages? Working memory.
+How did the agent remember my first message? With working memory.
 
-Mastra keeps a draft for each conversation, with the same Zod schema. It gives the draft to the model every turn, and the agent updates it with a built-in tool.
+Mastra keeps a draft for each conversation, with the same Zod schema. It gives the draft to the model on every turn. The agent updates it with a built-in tool.
 
-**[click]** Turn one: name and skills.
+**[click]** Turn one: the name and the skills.
 
 **[click]** Turn two: only the new data — the company.
 
-**[click]** Turn three: "yes" — it reads the full draft and makes the PDF.
+**[click]** Turn three: "yes". The agent reads the full draft and makes the PDF.
 
-**[click]** And it's the same schema the workflow uses. One schema keeps both backends in sync.
+**[click]** And this is the same schema the workflow uses. One schema keeps both backends in sync.
 
 ---
 
@@ -730,7 +735,7 @@ Mastra keeps a draft for each conversation, with the same Zod schema. It gives t
 
 ## 18 · Render React in chat
 
-`/demo/render-react` · notes: 78 words ≈ 0:39
+`/demo/render-react` · notes: 84 words ≈ 0:42
 
 ### On screen
 
@@ -742,8 +747,7 @@ Mastra keeps a draft for each conversation, with the same Zod schema. It gives t
 
 ```ts
 outputSchema: z.object({
-  field: z.string(),
-  proposedValue: z.string(),
+  // …the tool's normal fields
   ui: z.object({
     type: z.literal("ConfirmCard"),
     props: ConfirmSchema,   // same Zod
@@ -755,42 +759,60 @@ outputSchema: z.object({
 
 ```tsx
 <Renderer
-  spec={{ root: "r", elements: {
-    r: { type: spec.type, props: spec.props },
-  }}}
+  spec={{ root: "r", elements: { r: ui } }}
   registry={registry}
 />
 ```
 
-Each tool output carries a `ui` spec. Agent picks the tool — agent picks the component.
+Two tools return a `ui` spec. Agent picks the tool — agent picks the component.
 
 - + `validateCV` valid → `CVCard`
 - + `askConfirmation` → `ConfirmCard`
 - + Unknown type → nothing renders. Fail-safe.
 
-One Zod schema, four call-sites. extract · memory · validate · render.
+Same Zod schemas — from model output to React props.
 
 ### Say
 
-Since this is HelsinkiJS — one minute on the frontend.
+This is HelsinkiJS, so — one minute about the frontend.
 
-The CV card and the Yes/No card are real React components. The model never sends HTML. A tool returns a small spec — a component name and its props — and React renders it.
+The CV card and the Yes/No card are real React components. The model never sends HTML. A tool returns a small spec — a component name and its props. React renders it.
 
 **[click]** validateCV returns a CVCard.
 
 **[click]** askConfirmation returns a ConfirmCard.
 
-**[click]** An unknown type renders nothing. Safe by default.
+**[click]** If the type is unknown, nothing renders. It's safe by default.
 
-**[click]** So the agent picks the component by picking the tool. Same Zod schema — all the way down to React props.
+**[click]** So the agent picks the component when it picks the tool. And the same Zod schemas go all the way to the React props.
 
 ---
 
 <a id="slide-19"></a>
 
-## 19 · Wrap-up
+## 19 · Next talk
 
-`/wrap-up` · notes: 80 words ≈ 0:40
+`/next` · notes: 22 words ≈ 0:11
+
+### On screen
+
+*coming next*
+
+##### Make Your Decision
+
+A talk about decision models.
+
+### Say
+
+And one more thing. My next talk is called "Make Your Decision". It's about decision models. I hope to see you there!
+
+---
+
+<a id="slide-20"></a>
+
+## 20 · Wrap-up
+
+`/wrap-up` · notes: 82 words ≈ 0:41
 
 ### On screen
 
@@ -800,8 +822,8 @@ The CV card and the Yes/No card are real React components. The model never sends
 
 - **completion** — for predictable steps
 - **structured** — data over text
-- **tools** — let the agent act
-- **memory** — one Zod schema, many call-sites
+- **tools** — the model asks, your code acts
+- **memory** — remembers between turns
 - **agent** — when the path is unknown · mind the risks
 
 \> scan for the code
@@ -814,14 +836,14 @@ Thanks! Find me after the talk. @beshkenadze · agents 101
 
 Let's wrap up.
 
-Completion — one call, one answer. Great for steps you know.
+Completion — one call, one answer. Great when you know the steps.
 Structured output — data, not text.
 Tools — the model asks, your code acts.
 Memory — the agent remembers between turns.
 
-And an agent is all of this in a loop. Use it when the path is not known. Start with a workflow — and add an agent when the workflow is not enough.
+And an agent is all of this in a loop. Use it when you don't know the path. Start with a workflow, and add an agent when the workflow is not enough.
 
-All the code is in the repo — scan the QR. Thank you! Find me after the talk.
+All the code is in the repo — scan the QR code. Thank you! Find me after the talk.
 
 ---
 
@@ -831,6 +853,9 @@ Changes to the slides, newest first.
 
 | Date | Commit | Change |
 |---|---|---|
+| 2026-10-14 | [`12beb13`](https://github.com/beshkenadze/agents-101/commit/12beb13) | demo: lock the mode badge per conversation, update stage directions |
+| 2026-10-14 | [`5aaa2d6`](https://github.com/beshkenadze/agents-101/commit/5aaa2d6) | slides: teaser for the next talk, Make Your Decision |
+| 2026-10-14 | [`3532785`](https://github.com/beshkenadze/agents-101/commit/3532785) | Second review pass: B2-level notes, slide fixes, readable inline code |
 | 2026-10-14 | [`01a69d6`](https://github.com/beshkenadze/agents-101/commit/01a69d6) | Wrap-up slide trimmed; README rewritten for people who scan the QR |
 | 2026-10-14 | [`85c98bf`](https://github.com/beshkenadze/agents-101/commit/85c98bf) | slides: demo chapter notes trimmed; stage directions marked as LIVE lines |
 | 2026-10-14 | [`46f80e1`](https://github.com/beshkenadze/agents-101/commit/46f80e1) | slides: chapter 03 notes trimmed; 'known steps' heading instead of flowchart |

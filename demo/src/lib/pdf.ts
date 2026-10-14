@@ -1,9 +1,15 @@
 import { mkdir, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
 import { join } from "node:path";
 import type { Template } from "@pdfme/common";
 import { generate } from "@pdfme/generator";
 import { line, text } from "@pdfme/schemas";
 import type { CV } from "@/lib/schemas";
+
+// Generated PDFs live outside public/: Next serves public/ only as it was
+// at build time, so `next start` would 404 on files written at runtime.
+// app/api/cvs/[file]/route.ts serves them from here.
+export const CV_DIR = join(tmpdir(), "agents-101-cvs");
 
 // ─── Template tokens ──────────────────────────────────────────
 const INK = "#17171a";
@@ -166,9 +172,8 @@ export async function renderCVtoPdf(cv: CV): Promise<RenderedCV> {
 	});
 
 	const id = crypto.randomUUID().slice(0, 8);
-	const dir = join(process.cwd(), "public", "cvs");
-	await mkdir(dir, { recursive: true });
-	await writeFile(join(dir, `${id}.pdf`), pdf);
+	await mkdir(CV_DIR, { recursive: true });
+	await writeFile(join(CV_DIR, `${id}.pdf`), pdf);
 
-	return { url: `/cvs/${id}.pdf`, bytes: pdf.length };
+	return { url: `/api/cvs/${id}.pdf`, bytes: pdf.length };
 }

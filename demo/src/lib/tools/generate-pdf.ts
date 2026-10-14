@@ -10,7 +10,7 @@ export const generatePdf = createTool({
 	inputSchema: CVSchema,
 	outputSchema: z.object({
 		name: z.string(),
-		url: z.string().describe("Path under /cvs/... served by Next"),
+		url: z.string().describe("Download URL of the PDF (/api/cvs/<id>.pdf)"),
 		bytes: z.number().describe("Size of the generated PDF in bytes"),
 	}),
 	execute: async (cv) => {

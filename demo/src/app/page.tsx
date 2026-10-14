@@ -2,14 +2,28 @@
 
 import { useChat } from "@ai-sdk/react";
 import { JSONUIProvider, Renderer } from "@json-render/react";
-import { DefaultChatTransport } from "ai";
+import { DefaultChatTransport, type ToolUIPart } from "ai";
+import { type ReactNode, useEffect, useRef, useState } from "react";
 import {
-	type FormEvent,
-	type KeyboardEvent,
-	useEffect,
-	useRef,
-	useState,
-} from "react";
+	Conversation,
+	ConversationContent,
+	ConversationScrollButton,
+} from "@/components/ai-elements/conversation";
+import {
+	PromptInput,
+	type PromptInputMessage,
+	PromptInputSubmit,
+	PromptInputTextarea,
+} from "@/components/ai-elements/prompt-input";
+import { Shimmer } from "@/components/ai-elements/shimmer";
+import { Suggestion } from "@/components/ai-elements/suggestion";
+import {
+	Tool,
+	ToolContent,
+	ToolHeader,
+	ToolInput,
+	ToolOutput,
+} from "@/components/ai-elements/tool";
 import { type UISpec, UISpecSchema } from "@/lib/schemas";
 import { registry } from "@/lib/ui/registry";
 import { ReplyContext } from "@/lib/ui/reply-context";
@@ -19,20 +33,14 @@ type Backend = "workflow" | "agent";
 type WorkflowStep = {
 	step: 1 | 2 | 3 | 4;
 	label: string;
-	status: "running" | "done";
+	status: "running" | "done" | "error";
 };
 
-const STEP_LABELS: Record<number, string> = {
-	1: "extractSkills()",
-	2: "formatExperience()",
-	3: "assembleCV()",
-	4: "generatePdf()",
-};
-
+// Stage script. Clicking a chip sends it. The first message has no company
+// on purpose: both backends must notice and ask for it.
 const SUGGESTIONS = [
-	"3 years React, last year lead at a startup",
-	"TypeScript + Node, some Python",
-	"Agency work before, now product",
+	"My name is Aleksandr. For two years I've worked as an AI consultant. Skills: TypeScript, Node, LLMs, on-device ML.",
+	"The company is Denovo.",
 ];
 
 function filePartName(url: string) {
@@ -60,7 +68,7 @@ export default function ChatPage() {
 	);
 	const resourceId = "demo-user";
 
-	const { messages, sendMessage, status } = useChat({
+	const { messages, sendMessage, status, error, regenerate } = useChat({
 		transport: new DefaultChatTransport({
 			api: "/api/chat",
 			prepareSendMessagesRequest: ({ messages: msgs }) => ({
@@ -74,28 +82,12 @@ export default function ChatPage() {
 		}),
 	});
 
-	const chatRef = useRef<HTMLDivElement>(null);
-	const inputRef = useRef<HTMLTextAreaElement>(null);
 	const [input, setInput] = useState("");
 
-	// auto-scroll on new messages
+	// ⌘K / Ctrl+K reloads the page: a new page is a new conversation
+	// (new thread id, empty working memory, mode back to "agent").
 	useEffect(() => {
-		const el = chatRef.current;
-		if (!el) return;
-		requestAnimationFrame(() => {
-			el.scrollTop = el.scrollHeight;
-		});
-	}, [messages]);
-
-	// focus input on mount
-	useEffect(() => {
-		inputRef.current?.focus();
-	}, []);
-
-	// cmd+K to clear (not implemented fully — useChat has no clear method exposed,
-	// but we keep the shortcut advertised in the hints)
-	useEffect(() => {
-		const onKey = (e: globalThis.KeyboardEvent) => {
+		const onKey = (e: KeyboardEvent) => {
 			if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
 				e.preventDefault();
 				location.reload();
@@ -105,39 +97,47 @@ export default function ChatPage() {
 		return () => window.removeEventListener("keydown", onKey);
 	}, []);
 
-	const autoGrow = () => {
-		const el = inputRef.current;
-		if (!el) return;
-		el.style.height = "auto";
-		el.style.height = `${Math.min(el.scrollHeight, 120)}px`;
-	};
-
-	const handleSubmit = (e?: FormEvent) => {
-		e?.preventDefault();
-		const text = input.trim();
+	const handleSubmit = (message: PromptInputMessage) => {
+		const text = message.text?.trim();
 		if (!text || status === "streaming" || status === "submitted") return;
 		sendMessage({ text });
 		setInput("");
-		requestAnimationFrame(autoGrow);
-	};
-
-	const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
-		if (e.key === "Enter" && !e.shiftKey) {
-			e.preventDefault();
-			handleSubmit();
-		}
 	};
 
 	const handleSuggestion = (text: string) => {
-		setInput(text);
-		requestAnimationFrame(() => {
-			autoGrow();
-			inputRef.current?.focus();
-		});
+		sendMessage({ text });
+		setInput("");
 	};
 
 	const busy = status === "streaming" || status === "submitted";
-	const showSuggestions = messages.length === 0;
+	// A failed turn: a transport/stream error, or an error part from the
+	// server. Retry re-sends the same user message.
+	const lastMessage = messages.at(-1);
+	const failed =
+		!busy &&
+		(!!error ||
+			(lastMessage?.role === "assistant" &&
+				lastMessage.parts.some((p) => p.type === "data-error")));
+	const retry = () => {
+		void regenerate();
+	};
+	// Show one chip: the next stage line that was not sent yet. The row stays
+	// in place (disabled) while the model answers, so the chat height does not
+	// jump and the conversation stays scrolled to the bottom.
+	const sentTexts = new Set(
+		messages
+			.filter((m) => m.role === "user")
+			.map((m) =>
+				m.parts
+					.map((p) => (p.type === "text" ? p.text : ""))
+					.join("")
+					.trim(),
+			),
+	);
+	const suggestions = SUGGESTIONS.filter((s) => !sentTexts.has(s)).slice(0, 1);
+	// While a turn is failed, only "retry" moves forward: no chip, so one
+	// click cannot skip a step of the script.
+	const showSuggestions = suggestions.length > 0 && !failed;
 
 	return (
 		<ReplyContext.Provider
@@ -170,7 +170,14 @@ export default function ChatPage() {
 								type="button"
 								className="mode-badge"
 								data-mode={backend}
-								title="click to toggle backend"
+								// Locked after the first message: one conversation = one
+								// backend. ⌘K starts a new conversation.
+								disabled={messages.length > 0}
+								title={
+									messages.length > 0
+										? "⌘K for a new conversation"
+										: "click to toggle backend"
+								}
 								onClick={() =>
 									setBackend((b) => (b === "agent" ? "workflow" : "agent"))
 								}
@@ -180,80 +187,71 @@ export default function ChatPage() {
 							</button>
 						</div>
 
-						<div className="chat" ref={chatRef}>
-							<SystemLine role="// init">
-								session started · model: gpt-6-sol · tools: extractMetadata,
-								validateCV, askConfirmation, webSearch, generatePdf
-							</SystemLine>
-							<AssistantLine>
-								Hey. Tell me about your work — skills, jobs, years — in plain
-								words. I'll turn it into a structured CV and export it to PDF.
-							</AssistantLine>
+						<Conversation>
+							<ConversationContent className="flex flex-col gap-5 px-7 py-6">
+								<SystemLine role="// init">
+									{backend === "agent"
+										? "session started · agent · model: gpt-6-sol · tools: extractMetadata, validateCV, askConfirmation, webSearch, generatePdf"
+										: "session started · workflow · model: gpt-6-luna · steps: extract → merge → validate → branch"}
+								</SystemLine>
+								<AssistantLine>
+									Hey. Tell me about your work — skills, jobs, years — in plain
+									words. I'll turn it into a structured CV and export it to PDF.
+								</AssistantLine>
 
-							{messages.map((m, mi) => (
-								<MessageView
-									key={m.id}
-									message={m}
-									isLast={mi === messages.length - 1}
-									busy={busy}
-									backend={backend}
-								/>
-							))}
+								{messages.map((m, mi) => (
+									<MessageView
+										key={m.id}
+										message={m}
+										isLast={mi === messages.length - 1}
+										busy={busy}
+										backend={backend}
+										onRetry={retry}
+									/>
+								))}
 
-							{busy && messages.at(-1)?.role !== "assistant" && (
-								<div className="msg assistant">
-									<span className="role">agent</span>
-									<span className="content">
-										<span className="thinking">
-											<span className="d" />
-											<span className="d" />
-											<span className="d" />
+								{error && !busy && (
+									<ErrorLine message={error.message} onRetry={retry} />
+								)}
+
+								{busy && messages.at(-1)?.role !== "assistant" && (
+									<div className="msg assistant">
+										<span className="role">agent</span>
+										<span className="content">
+											<Shimmer>thinking…</Shimmer>
 										</span>
-									</span>
-								</div>
-							)}
-						</div>
+									</div>
+								)}
+							</ConversationContent>
+							<ConversationScrollButton />
+						</Conversation>
 
 						{showSuggestions && (
 							<div className="suggestions">
-								{SUGGESTIONS.map((s) => (
-									<button
+								{suggestions.map((s) => (
+									<Suggestion
 										key={s}
-										type="button"
+										suggestion={s}
+										onClick={handleSuggestion}
+										disabled={busy}
 										className="chip"
-										onClick={() => handleSuggestion(s)}
-									>
-										{s}
-									</button>
+									/>
 								))}
 							</div>
 						)}
 
-						<form className="inputbar" onSubmit={handleSubmit}>
-							<span className="prompt">❯</span>
-							<textarea
-								ref={inputRef}
-								rows={1}
+						<PromptInput onSubmit={handleSubmit} className="inputbar">
+							<PromptInputTextarea
 								placeholder="type a message, enter to send · shift+enter for newline"
-								autoComplete="off"
-								spellCheck={false}
 								value={input}
-								onChange={(e) => {
-									setInput(e.target.value);
-									autoGrow();
-								}}
-								onKeyDown={handleKeyDown}
+								onChange={(e) => setInput(e.target.value)}
 								disabled={busy}
 							/>
-							<button
-								className="send"
-								type="submit"
+							<PromptInputSubmit
+								status={status}
 								disabled={busy || !input.trim()}
-							>
-								<span>run</span>
-								<span className="kbd">↵</span>
-							</button>
-						</form>
+							/>
+						</PromptInput>
 					</div>
 
 					<div className="hints">
@@ -305,57 +303,47 @@ function UserLine({ children }: { children: React.ReactNode }) {
 	);
 }
 
-function Divider({ label }: { label: string }) {
+// Fallback for errors that reach the client raw (network down, or an error
+// object sent as JSON): show one short line, never a stack trace.
+function shortError(message: string) {
+	let text = message;
+	if (text.trimStart().startsWith("{")) {
+		try {
+			const parsed = JSON.parse(text) as { message?: unknown };
+			if (typeof parsed.message === "string") text = parsed.message;
+		} catch {}
+	}
+	if (text === "Failed to fetch") text = "no connection to the demo server";
+	const line = text.split("\n")[0].trim();
+	return line.length > 180 ? `${line.slice(0, 177)}…` : line;
+}
+
+function ErrorLine({
+	message,
+	onRetry,
+}: {
+	message: string;
+	onRetry?: () => void;
+}) {
 	return (
-		<div className="divider">
-			<span>{label}</span>
+		<div className="msg error" role="alert">
+			<span className="role">error</span>
+			<span className="content">
+				<span className="error-text">{shortError(message)}</span>
+				{onRetry && (
+					<button type="button" className="retry" onClick={onRetry}>
+						retry
+					</button>
+				)}
+			</span>
 		</div>
 	);
 }
 
-function ToolBlock({
-	title,
-	args,
-	done,
-	result,
-}: {
-	title: string;
-	args?: Record<string, unknown> | string;
-	done?: boolean;
-	result?: string;
-}) {
-	const entries =
-		args && typeof args === "object"
-			? Object.entries(args)
-			: args
-				? [["input", args]]
-				: [];
+function Divider({ label }: { label: string }) {
 	return (
-		<div className="tool" data-done={done ? "" : undefined}>
-			<span className="role">tool</span>
-			<div className="body">
-				<div className="head">
-					<span className="spin" />
-					<span>{title}</span>
-				</div>
-				{entries.length > 0 || result ? (
-					<div className="args">
-						{entries.map(([k, v]) => {
-							const raw = typeof v === "string" ? v : JSON.stringify(v);
-							const preview = raw.length > 160 ? `${raw.slice(0, 160)}…` : raw;
-							return (
-								<div key={k}>
-									<span className="k">{k}:</span>{" "}
-									<span className="s">
-										{typeof v === "string" ? `"${preview}"` : preview}
-									</span>
-								</div>
-							);
-						})}
-						{done && result ? <div className="done">→ {result}</div> : null}
-					</div>
-				) : null}
-			</div>
+		<div className="divider">
+			<span>{label}</span>
 		</div>
 	);
 }
@@ -405,11 +393,13 @@ function MessageView({
 	isLast,
 	busy,
 	backend,
+	onRetry,
 }: {
 	message: UiMessage;
 	isLast: boolean;
 	busy: boolean;
 	backend: Backend;
+	onRetry: () => void;
 }) {
 	if (message.role === "user") {
 		const text = message.parts
@@ -522,15 +512,14 @@ function MessageView({
 		output?: unknown;
 	};
 	// Tool blocks: skip tools whose output is rendered as a dedicated UI
-	// (askConfirmation → ConfirmCard, generatePdf → Attachment, validateCV →
-	// folded into CVCard render). Everything else shows as a generic block.
+	// (askConfirmation → ConfirmCard, generatePdf → Attachment). validateCV
+	// stays visible: the audience should see the agent calling validation.
 	const rawToolParts = message.parts.filter(
 		(p) =>
 			typeof p.type === "string" &&
 			p.type.startsWith("tool-") &&
 			p.type !== "tool-generatePdf" &&
-			p.type !== "tool-askConfirmation" &&
-			p.type !== "tool-validateCV",
+			p.type !== "tool-askConfirmation",
 	) as unknown as ToolPart[];
 	const toolById = new Map<string, ToolPart>();
 	rawToolParts.forEach((p, idx) => {
@@ -540,6 +529,10 @@ function MessageView({
 	const toolParts = Array.from(toolById.values());
 
 	const lastAssistantText = textParts.map((p) => p.text).join("");
+
+	const errorPart = message.parts.findLast((p) => p.type === "data-error") as
+		| { data?: { message?: string } }
+		| undefined;
 
 	return (
 		<>
@@ -553,44 +546,50 @@ function MessageView({
 			)}
 
 			{steps.map((s) => (
-				<ToolBlock
-					key={`step-${s.step}`}
-					title={`step ${s.step} · ${STEP_LABELS[s.step] ?? s.label}`}
-					done={s.status === "done"}
-					result={
-						s.status === "done"
-							? s.step === 4
-								? "pdf saved"
-								: s.step === 3
-									? "cv assembled"
-									: "ok"
-							: undefined
-					}
-				/>
+				<Tool key={`step-${s.step}`} defaultOpen={false}>
+					<ToolHeader
+						type="dynamic-tool"
+						toolName={`step ${s.step} · ${s.label}`}
+						state={
+							s.status === "done"
+								? "output-available"
+								: s.status === "error"
+									? "output-error"
+									: "input-available"
+						}
+					/>
+				</Tool>
 			))}
 
 			{toolParts.map((p, i) => {
-				const name = p.type.replace(/^tool-/, "");
-				const state = p.state ?? "input-streaming";
-				const done = state === "output-available" || state === "output-error";
-				const resultPreview =
-					typeof p.output === "string"
-						? p.output.slice(0, 120)
-						: p.output
-							? JSON.stringify(p.output).slice(0, 120)
-							: undefined;
+				const state = (p.state ?? "input-streaming") as ToolUIPart["state"];
 				return (
-					<ToolBlock
+					<Tool
 						key={p.toolCallId ?? `${message.id}-tool-${i}`}
-						title={`${name}()`}
-						args={(p.input as Record<string, unknown>) ?? undefined}
-						done={done}
-						result={resultPreview}
-					/>
+						defaultOpen={false}
+					>
+						<ToolHeader type={p.type as ToolUIPart["type"]} state={state} />
+						<ToolContent>
+							{p.input !== undefined && (
+								<ToolInput input={p.input as ToolUIPart["input"]} />
+							)}
+							<ToolOutput
+								output={p.output as ReactNode}
+								errorText={undefined as unknown as ToolUIPart["errorText"]}
+							/>
+						</ToolContent>
+					</Tool>
 				);
 			})}
 
 			{lastAssistantText && <AssistantLine>{lastAssistantText}</AssistantLine>}
+
+			{errorPart?.data?.message && (
+				<ErrorLine
+					message={errorPart.data.message}
+					onRetry={isLast && !busy ? onRetry : undefined}
+				/>
+			)}
 
 			{uiSpecs.map((u) => {
 				// Hide stale Yes/No cards on older turns; CV previews stay.
@@ -655,11 +654,7 @@ function MessageView({
 				<div className="msg assistant">
 					<span className="role">agent</span>
 					<span className="content">
-						<span className="thinking">
-							<span className="d" />
-							<span className="d" />
-							<span className="d" />
-						</span>
+						<Shimmer>thinking…</Shimmer>
 					</span>
 				</div>
 			)}
