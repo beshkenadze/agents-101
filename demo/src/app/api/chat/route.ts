@@ -33,7 +33,9 @@ type Writer = Parameters<
 // One short, readable line for the chat. The page shows it with a retry
 // button, so a network or API hiccup on stage is one click to fix.
 function errorText(err: unknown) {
-	const raw = err instanceof Error ? err.message : String(err);
+	// Mastra returns a failed run's error as a plain object, not an Error.
+	const message = (err as { message?: unknown } | null)?.message;
+	const raw = typeof message === "string" ? message : String(err);
 	const line = raw.split("\n")[0].trim();
 	return line.length > 180 ? `${line.slice(0, 177)}…` : line;
 }
