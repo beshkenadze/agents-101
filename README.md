@@ -1,40 +1,75 @@
 # Agents 101
 
-Talk slides: **From a simple API call to a working AI agent — step by step.**
+**From a simple API call to a working AI agent — step by step.**
 
-Stack: TypeScript, Vercel AI SDK, Mastra. Built with [Slidev](https://sli.dev).
+Code and slides from my talk at HelsinkiJS. The demo is a chat that turns a
+free-text description of your experience into a CV (PDF). It has **two
+backends** for the same task, so you can compare them side by side:
 
-## Run locally
+- **Workflow** — fixed steps that you write in code.
+- **Agent** — a model with tools in a loop. It decides the steps itself.
+
+Stack: TypeScript, [Vercel AI SDK](https://ai-sdk.dev/docs), [Mastra](https://mastra.ai/docs), Next.js.
+
+## Run the demo
+
+You need Node.js 22.13+, [Bun](https://bun.sh) and an OpenAI API key.
+
+```bash
+cd demo
+bun install
+cp .env.example .env.local   # add your OPENAI_API_KEY
+bun run dev                  # http://localhost:3000
+```
+
+`FIRECRAWL_API_KEY` is optional. Without it the agent's web search tool returns
+no results, and everything else works.
+
+Click the **mode** badge at the top of the chat to switch between **agent**
+(the default) and **workflow**. Each page load is a new conversation, so reload
+the page before you switch. Try a message without a company name and see how
+each backend asks for it.
+
+## Where to look
+
+| What | File |
+|---|---|
+| Structured output: one `generateText` call with `Output.object` | [`demo/src/lib/extract.ts`](demo/src/lib/extract.ts) |
+| Zod schemas (CV, draft, UI specs) | [`demo/src/lib/schemas.ts`](demo/src/lib/schemas.ts) |
+| **Workflow** backend: extract → merge → validate → branch | [`demo/src/lib/workflows/cv-workflow.ts`](demo/src/lib/workflows/cv-workflow.ts) |
+| **Agent** backend: instructions, tools, memory | [`demo/src/lib/agents/cv-agent.ts`](demo/src/lib/agents/cv-agent.ts) |
+| Tools the agent can call | [`demo/src/lib/tools/`](demo/src/lib/tools/) |
+| Working memory with a Zod schema | [`demo/src/lib/memory.ts`](demo/src/lib/memory.ts) |
+| API route that picks the backend | [`demo/src/app/api/chat/route.ts`](demo/src/app/api/chat/route.ts) |
+| React components rendered from tool output | [`demo/src/lib/ui/`](demo/src/lib/ui/), [`demo/src/components/`](demo/src/components/) |
+
+## Learn more
+
+- [AI SDK docs](https://ai-sdk.dev/docs) — `generateText`, structured output, tools
+- [Mastra docs](https://mastra.ai/docs) — agents, workflows, memory
+- [Slides](https://beshkenadze.github.io/agents-101/) — the talk itself
+- [`agents-101.md`](agents-101.md) — every slide with its speaker notes, as plain text
+
+---
+
+## Slides
+
+The slides are built with [Slidev](https://sli.dev).
 
 ```bash
 bun install
-bun run dev        # live reload at http://localhost:3030
-```
-
-Press `p` to open presenter mode (slide + next preview + speaker notes + timer).
-
-## Export
-
-```bash
+bun run dev            # http://localhost:3030, press `p` for presenter mode
 bun run build          # static build in ./dist
 bun run export         # PDF (requires playwright-chromium)
-bun run export:notes   # speaker notes as a separate PDF
+bun run export:md      # regenerate agents-101.md
 ```
 
-## Structure
-
-- `slides.md` — all slides plus speaker notes (the source of truth)
-- `agents-101.md` — readable export: slide text, speaker notes, timing, version. Regenerate with `bun run export:md`
+- `slides.md` — all slides and speaker notes (the source of truth)
+- `agents-101.md` — readable export: slide text, notes, timing, version
+- `diagrams/` — diagram sources ([archify](https://github.com/tt-a1i/archify)); SVGs in `public/diagrams/`
 - `style.css` — design tokens (colors, fonts, layout classes)
-- `slide-top.vue` / `slide-bottom.vue` — terminal chrome, reads `path` / `meta` / `status` from per-slide frontmatter
-- `layouts/split.vue` — header + two-column layout for code + text slides
+- `slide-top.vue` / `slide-bottom.vue`, `layouts/split.vue` — slide chrome and layouts
 
-## Sync between speech and slide
-
-Slidev ships three layers:
-
-1. **Presenter mode** (press `p` or go to `/presenter`) — current slide on the left, speaker notes and next-slide preview on the right, timer on top.
-2. **Click markers** — `[click]` in speaker notes. Combined with `v-click` directives on slide elements, the right note gets highlighted as you press space.
-3. **Recording** — `slidev export --with-clicks` can render a full video with webcam.
-
-See [sli.dev/features/click-marker](https://sli.dev/features/click-marker).
+In presenter mode, each `[click]` in the speaker notes is highlighted when you
+press space. Lines like `>>> LIVE: … <<<` are stage directions for the demo,
+not text to read.

@@ -585,7 +585,7 @@ Extract is the only model call — gpt-6-luna, the cheapest model, reasoning off
 
 [click] And every path is in our code — no surprises.
 
->>> LIVE: toggle = workflow, new thread, paste the prompt without the company <<<
+>>> LIVE: reload the page (new thread) → click the badge to "mode: workflow" → paste the prompt without the company <<<
 
 Watch the steps: extract, merge, validate… and it asks: "Which company was that role at?"
 
@@ -641,7 +641,7 @@ Five tools — four do the same jobs as the workflow steps. The fifth is web sea
 
 [click] The price: more model calls, and more variance.
 
->>> LIVE: toggle = agent, new thread, same prompt <<<
+>>> LIVE: reload the page (new thread, starts in "mode: agent") → paste the same prompt <<<
 
 Look at the tool calls: extract, save to memory, validate… It finds the missing company and asks for it.
 
@@ -769,7 +769,7 @@ The CV card and the Yes/No card are real React components. The model never sends
 -->
 
 ---
-title: Wrap-up & Q&A
+title: Wrap-up
 path: "/wrap-up"
 meta: "§ end · Q & A"
 status: "end of deck"
@@ -797,24 +797,19 @@ github.com/beshkenadze/agents-101
 </div>
 
 <div class="thanks-row">
-<span class="big">Thanks. Questions?<span class="caret"></span></span>
+<span class="big">Thanks! Find me after the talk.<span class="caret"></span></span>
 <span class="sig">@beshkenadze · agents 101</span>
 </div>
 
 <!--
-Quick recap. We went from one generateText call to a working agent with memory. Step by step.
+Let's wrap up.
 
-Completion — one call in, one string out. Use it when the plan is fixed.
+Completion — one call, one answer. Great for steps you know.
+Structured output — data, not text.
+Tools — the model asks, your code acts.
+Memory — the agent remembers between turns.
 
-Structured output — so you get typed data, not a paragraph to parse. Plug in a repair pass if JSON breaks.
+And an agent is all of this in a loop. Use it when the path is not known. Start with a workflow — and add an agent when the workflow is not enough.
 
-Tools — structured output that your code runs. This is how the agent acts, not just talks.
-
-Memory — state across turns, backed by a Zod schema. The same schema that validates output also shapes what the agent remembers, and what React renders. One schema, four call sites. That is the spine.
-
-Agent — completion plus tools plus a loop. Use it when the path is not known up front. Remember the costs: more tokens, higher variance, the chance of drift. Start with a workflow. Reach for an agent when the workflow cannot express the task.
-
-QR code — the demo repo. Workflow and agent live side by side, with shared Zod schemas. Links to Mastra and AI SDK docs in the README.
-
-Thanks for listening. Questions.
+All the code is in the repo — scan the QR. Thank you! Find me after the talk.
 -->
