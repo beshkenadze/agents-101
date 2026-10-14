@@ -303,6 +303,21 @@ function UserLine({ children }: { children: React.ReactNode }) {
 	);
 }
 
+// Fallback for errors that reach the client raw (network down, or an error
+// object sent as JSON): show one short line, never a stack trace.
+function shortError(message: string) {
+	let text = message;
+	if (text.trimStart().startsWith("{")) {
+		try {
+			const parsed = JSON.parse(text) as { message?: unknown };
+			if (typeof parsed.message === "string") text = parsed.message;
+		} catch {}
+	}
+	if (text === "Failed to fetch") text = "no connection to the demo server";
+	const line = text.split("\n")[0].trim();
+	return line.length > 180 ? `${line.slice(0, 177)}…` : line;
+}
+
 function ErrorLine({
 	message,
 	onRetry,
@@ -314,7 +329,7 @@ function ErrorLine({
 		<div className="msg error" role="alert">
 			<span className="role">error</span>
 			<span className="content">
-				<span className="error-text">{message}</span>
+				<span className="error-text">{shortError(message)}</span>
 				{onRetry && (
 					<button type="button" className="retry" onClick={onRetry}>
 						retry

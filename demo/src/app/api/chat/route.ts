@@ -26,14 +26,22 @@ type Body = {
 const APPROVAL_RE =
 	/^\s*(yes|yep|yeah|approve|approved|generate|ok|go|do it|let'?s go)\b/i;
 
+type InferChunk<S> = S extends ReadableStream<infer C> ? C : never;
+
 type Writer = Parameters<
 	Parameters<typeof createUIMessageStream>[0]["execute"]
 >[0]["writer"];
 
 // One short, readable line for the chat. The page shows it with a retry
 // button, so a network or API hiccup on stage is one click to fix.
-function errorText(err: unknown) {
-	// Mastra returns a failed run's error as a plain object, not an Error.
+function errorText(err: unknown): string {
+	// Mastra may give the error as a plain object, or as that object in a
+	// JSON string (agent stream "error" chunks). Keep only the message.
+	if (typeof err === "string" && err.trimStart().startsWith("{")) {
+		try {
+			return errorText(JSON.parse(err));
+		} catch {}
+	}
 	const message = (err as { message?: unknown } | null)?.message;
 	const raw = typeof message === "string" ? message : String(err);
 	const line = raw.split("\n")[0].trim();
@@ -73,7 +81,30 @@ export async function POST(req: Request) {
 						params,
 						version: "v7",
 					});
-					writer.merge(agentStream);
+					// Turn the agent's "error" chunk into the same short error
+					// line the workflow uses (with retry), not a raw stack trace.
+					writer.merge(
+						agentStream.pipeThrough(
+							new TransformStream<
+								InferChunk<typeof agentStream>,
+								InferChunk<typeof agentStream>
+							>({
+								transform(chunk, controller) {
+									if (chunk.type === "error") {
+										controller.enqueue({
+											type: "data-error",
+											id: `error-${crypto.randomUUID().slice(0, 6)}`,
+											data: {
+												message: `agent failed: ${errorText(chunk.errorText)}`,
+											},
+										});
+										return;
+									}
+									controller.enqueue(chunk);
+								},
+							}),
+						),
+					);
 				} catch (err) {
 					console.error("[chat route] agent stream failed", err);
 					writeError(writer, `agent failed: ${errorText(err)}`);
