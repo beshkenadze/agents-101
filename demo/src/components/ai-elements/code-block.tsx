@@ -57,10 +57,12 @@ const addKeysToTokens = (lines: ThemedToken[][]): KeyedLine[] =>
     })),
   }));
 
-// Token rendering component
+// Token rendering component.
+// This app is always dark and has no `.dark` class, so use shiki's dark
+// token colors directly (the light ones are unreadable on the dark UI).
 const TokenSpan = ({ token }: { token: ThemedToken }) => (
   <span
-    className="dark:!bg-[var(--shiki-dark-bg)] dark:!text-[var(--shiki-dark)]"
+    className="!bg-[var(--shiki-dark-bg)] !text-[var(--shiki-dark)]"
     style={
       {
         backgroundColor: token.bgColor,
@@ -271,7 +273,7 @@ const CodeBlockBody = memo(
     return (
       <pre
         className={cn(
-          "dark:!bg-[var(--shiki-dark-bg)] dark:!text-[var(--shiki-dark)] m-0 p-4 text-sm",
+          "!bg-[var(--shiki-dark-bg)] !text-[var(--shiki-dark)] m-0 p-4 text-sm",
           className
         )}
         style={preStyle}

@@ -110,8 +110,9 @@ export default function ChatPage() {
 	};
 
 	const busy = status === "streaming" || status === "submitted";
-	// Show only the chips that were not sent yet, so the reply chip appears
-	// right after the first message.
+	// Show one chip: the next stage line that was not sent yet. The row stays
+	// in place (disabled) while the model answers, so the chat height does not
+	// jump and the conversation stays scrolled to the bottom.
 	const sentTexts = new Set(
 		messages
 			.filter((m) => m.role === "user")
@@ -122,8 +123,8 @@ export default function ChatPage() {
 					.trim(),
 			),
 	);
-	const suggestions = SUGGESTIONS.filter((s) => !sentTexts.has(s));
-	const showSuggestions = suggestions.length > 0 && !busy;
+	const suggestions = SUGGESTIONS.filter((s) => !sentTexts.has(s)).slice(0, 1);
+	const showSuggestions = suggestions.length > 0;
 
 	return (
 		<ReplyContext.Provider
@@ -207,6 +208,7 @@ export default function ChatPage() {
 										key={s}
 										suggestion={s}
 										onClick={handleSuggestion}
+										disabled={busy}
 										className="chip"
 									/>
 								))}
