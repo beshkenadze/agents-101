@@ -4,10 +4,10 @@
 
 | | |
 |---|---|
-| **Version** | `2026.10.14-85c98bf` |
+| **Version** | `2026.10.14-01a69d6` |
 | **State** | Branch `talk-texts`, **not merged to `main` yet** — the published deck is older. |
 | **Format** | 20 min · live demo · 19 slides |
-| **Speaker notes** | 1769 words ≈ 14:48 at 120 wpm (budget 19 min) |
+| **Speaker notes** | 1675 words ≈ 14:01 at 120 wpm (budget 19 min) |
 | **Slides** | https://beshkenadze.github.io/agents-101/ |
 | **Code** | https://github.com/beshkenadze/agents-101 |
 
@@ -24,8 +24,8 @@ Notes only — clicks, pauses and the live demo add time on top.
 | 02 · Structured output & tools | 7–9 | 2:47 | 4:00 |
 | 03 · Workflow vs. agent · orchestration | 10–11 | 1:32 | 2:00 |
 | 04 · Live demo — CV generator | 12–18 | 4:57 | 8:00 |
-| end · Wrap-up | 19–19 | 1:27 ⚠️ | 1:00 |
-| **Total** | 1–19 | **14:48** | **19:00** |
+| end · Wrap-up | 19–19 | 0:40 | 1:00 |
+| **Total** | 1–19 | **14:01** | **19:00** |
 
 ## Slides
 
@@ -47,7 +47,7 @@ Notes only — clicks, pauses and the live demo add time on top.
 - [16 · Demo — agent backend](#slide-16)
 - [17 · Working memory](#slide-17)
 - [18 · Render React in chat](#slide-18)
-- [19 · Wrap-up & Q&A](#slide-19)
+- [19 · Wrap-up](#slide-19)
 
 ---
 
@@ -612,7 +612,7 @@ Extract is the only model call — gpt-6-luna, the cheapest model, reasoning off
 
 **[click]** And every path is in our code — no surprises.
 
-**▶ LIVE: toggle = workflow, new thread, paste the prompt without the company**
+**▶ LIVE: reload the page (new thread) → click the badge to "mode: workflow" → paste the prompt without the company**
 
 Watch the steps: extract, merge, validate… and it asks: "Which company was that role at?"
 
@@ -666,7 +666,7 @@ Five tools — four do the same jobs as the workflow steps. The fifth is web sea
 
 **[click]** The price: more model calls, and more variance.
 
-**▶ LIVE: toggle = agent, new thread, same prompt**
+**▶ LIVE: reload the page (new thread, starts in "mode: agent") → paste the same prompt**
 
 Look at the tool calls: extract, save to memory, validate… It finds the missing company and asks for it.
 
@@ -788,9 +788,9 @@ The CV card and the Yes/No card are real React components. The model never sends
 
 <a id="slide-19"></a>
 
-## 19 · Wrap-up & Q&A
+## 19 · Wrap-up
 
-`/wrap-up` · notes: 174 words ≈ 1:27
+`/wrap-up` · notes: 80 words ≈ 0:40
 
 ### On screen
 
@@ -808,25 +808,20 @@ The CV card and the Yes/No card are real React components. The model never sends
 
 github.com/beshkenadze/agents-101
 
-Thanks. Questions? @beshkenadze · agents 101
+Thanks! Find me after the talk. @beshkenadze · agents 101
 
 ### Say
 
-Quick recap. We went from one generateText call to a working agent with memory. Step by step.
+Let's wrap up.
 
-Completion — one call in, one string out. Use it when the plan is fixed.
+Completion — one call, one answer. Great for steps you know.
+Structured output — data, not text.
+Tools — the model asks, your code acts.
+Memory — the agent remembers between turns.
 
-Structured output — so you get typed data, not a paragraph to parse. Plug in a repair pass if JSON breaks.
+And an agent is all of this in a loop. Use it when the path is not known. Start with a workflow — and add an agent when the workflow is not enough.
 
-Tools — structured output that your code runs. This is how the agent acts, not just talks.
-
-Memory — state across turns, backed by a Zod schema. The same schema that validates output also shapes what the agent remembers, and what React renders. One schema, four call sites. That is the spine.
-
-Agent — completion plus tools plus a loop. Use it when the path is not known up front. Remember the costs: more tokens, higher variance, the chance of drift. Start with a workflow. Reach for an agent when the workflow cannot express the task.
-
-QR code — the demo repo. Workflow and agent live side by side, with shared Zod schemas. Links to Mastra and AI SDK docs in the README.
-
-Thanks for listening. Questions.
+All the code is in the repo — scan the QR. Thank you! Find me after the talk.
 
 ---
 
@@ -836,6 +831,7 @@ Changes to the slides, newest first.
 
 | Date | Commit | Change |
 |---|---|---|
+| 2026-10-14 | [`01a69d6`](https://github.com/beshkenadze/agents-101/commit/01a69d6) | Wrap-up slide trimmed; README rewritten for people who scan the QR |
 | 2026-10-14 | [`85c98bf`](https://github.com/beshkenadze/agents-101/commit/85c98bf) | slides: demo chapter notes trimmed; stage directions marked as LIVE lines |
 | 2026-10-14 | [`46f80e1`](https://github.com/beshkenadze/agents-101/commit/46f80e1) | slides: chapter 03 notes trimmed; 'known steps' heading instead of flowchart |
 | 2026-10-14 | [`d2727f4`](https://github.com/beshkenadze/agents-101/commit/d2727f4) | slides: chapter 02 notes trimmed; tool heading no longer says the model calls it |
