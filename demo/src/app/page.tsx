@@ -131,7 +131,20 @@ export default function ChatPage() {
 	};
 
 	const busy = status === "streaming" || status === "submitted";
-	const showSuggestions = messages.length === 0;
+	// Show only the suggestions that were not sent yet, so on stage the
+	// reply chip appears right after the first message.
+	const sentTexts = new Set(
+		messages
+			.filter((m) => m.role === "user")
+			.map((m) =>
+				m.parts
+					.map((p) => (p.type === "text" ? (p as { text: string }).text : ""))
+					.join("")
+					.trim(),
+			),
+	);
+	const suggestions = SUGGESTIONS.filter((s) => !sentTexts.has(s));
+	const showSuggestions = suggestions.length > 0 && !busy;
 
 	return (
 		<ReplyContext.Provider
@@ -211,7 +224,7 @@ export default function ChatPage() {
 
 						{showSuggestions && (
 							<div className="suggestions">
-								{SUGGESTIONS.map((s) => (
+								{suggestions.map((s) => (
 									<button
 										key={s}
 										type="button"

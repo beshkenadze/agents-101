@@ -467,15 +467,15 @@ rect[fill="url(#grid)"] { display: none; }
         </g>
 
         <!-- Components -->
-        <g id="node-a" data-node-id="a" data-node-label="Agent A" tabindex="0" role="button" aria-label="Focus Agent A, triage, Architecture component" aria-pressed="false" data-node-kind="backend" data-node-sublabel="triage" data-node-context="Architecture component">
-          <title>Agent A · triage · Architecture component</title>
+        <g id="node-a" data-node-id="a" data-node-label="Agent A" tabindex="0" role="button" aria-label="Focus Agent A, first line, Architecture component" aria-pressed="false" data-node-kind="backend" data-node-sublabel="first line" data-node-context="Architecture component">
+          <title>Agent A · first line · Architecture component</title>
           <rect x="40" y="40" width="140" height="62" rx="6" class="c-mask"/>
           <rect x="40" y="40" width="140" height="62" rx="6" class="c-backend" stroke-width="1.5"/>
           <g aria-hidden="true" data-semantic-sigil="backend" class="semantic-sigil s-backend" transform="translate(46 46) scale(0.6875)">
             <path d="M6 3 3 8l3 5M10 3l3 5-3 5"/>
           </g>
           <text data-node-label="" x="110" y="69" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">Agent A</text>
-        <text x="110" y="85" class="t-muted" font-size="9" text-anchor="middle">triage</text>
+        <text x="110" y="85" class="t-muted" font-size="9" text-anchor="middle">first line</text>
         </g>
 
         <g id="node-b" data-node-id="b" data-node-label="Agent B" tabindex="0" role="button" aria-label="Focus Agent B, billing, Architecture component" aria-pressed="false" data-node-kind="backend" data-node-sublabel="billing" data-node-context="Architecture component">

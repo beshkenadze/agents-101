@@ -416,3 +416,15 @@ pre.ascii .warn, .ascii .warn { color: var(--warn); }
 }
 .slidev-layout .card img.diagram { max-height: 440px; object-position: center bottom; }
 .slidev-layout .col img.diagram { max-height: 220px; }
+
+/* Inline code. The default theme gives it a light background, which made
+   the light text invisible on this dark deck. */
+.slidev-layout :not(pre) > code {
+  background: var(--bg-3);
+  color: var(--accent);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  padding: 0.05em 0.35em;
+  font-family: var(--font-mono);
+  font-size: 0.9em;
+}

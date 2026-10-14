@@ -14,7 +14,7 @@
       "id": "a",
       "type": "backend",
       "label": "Agent A",
-      "sublabel": "triage",
+      "sublabel": "first line",
       "pos": [
         40,
         40
