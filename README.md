@@ -91,6 +91,8 @@ The slides are built with [Slidev](https://sli.dev).
 bun install
 bun run dev            # http://localhost:3030, press `p` for presenter mode
 bun run build          # static build in ./dist
+bun run serve          # serve ./dist with Bun: slides + presenter view on :3030
+bun run present        # build + serve in one step — use this on stage
 bun run export         # PDF (requires playwright-chromium)
 bun run export:md      # regenerate agents-101.md
 ```

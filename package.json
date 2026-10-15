@@ -8,7 +8,9 @@
     "dev": "slidev --open",
     "export": "slidev export",
     "export:notes": "slidev export-notes",
-    "export:md": "node scripts/export-md.mjs"
+    "export:md": "node scripts/export-md.mjs",
+    "serve": "bun scripts/serve.ts",
+    "present": "slidev build && bun scripts/serve.ts"
   },
   "dependencies": {
     "@slidev/cli": "^0.50.0",
