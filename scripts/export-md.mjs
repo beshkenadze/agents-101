@@ -181,7 +181,7 @@ function notesToMarkdown(note = "") {
 		.split("\n")
 		.map((line) => {
 			const live = line.match(/^>>>\s*(.*?)\s*<<<\s*$/);
-			if (live) return `**▶ ${live[1]}**`;
+			if (live) return `**${/^[▶◀]/.test(live[1]) ? "" : "▶ "}${live[1]}**`;
 			return line.replace(/\[click\]/g, "**[click]**");
 		})
 		.join("\n");

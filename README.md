@@ -100,5 +100,5 @@ bun run export:md      # regenerate agents-101.md
 - `slide-top.vue` / `slide-bottom.vue`, `layouts/split.vue` — slide chrome and layouts
 
 In presenter mode, each `[click]` in the speaker notes is highlighted when you
-press space. Lines like `>>> LIVE: … <<<` are stage directions for the demo,
+press space. Lines like `>>> ▶ SWITCH TO THE BROWSER <<<` are stage directions for the demo,
 not text to read.
