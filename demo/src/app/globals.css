@@ -501,6 +501,13 @@ body::before {
 	color: var(--fg-dim);
 	line-height: 1.5;
 }
+.cv-card .cv-summary {
+	margin-top: 8px;
+	font-size: 13px;
+	color: var(--fg);
+	line-height: 1.55;
+	white-space: normal;
+}
 .cv-card .cv-section {
 	display: flex;
 	flex-direction: column;
@@ -632,6 +639,7 @@ body::before {
 	border-top: 1px solid var(--line);
 }
 .suggestions .chip {
+	min-width: 0;
 	font-family: var(--font-mono);
 	font-size: 12px;
 	font-weight: normal;

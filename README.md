@@ -30,9 +30,34 @@ Click the **mode** badge at the top of the chat to switch between **agent**
 one conversation uses one backend. Press **⌘K** (Ctrl+K) to start a new
 conversation.
 
-The chip above the input sends a sample message in one click. The first one has
-no company name, so you can see how each backend asks for it. The next chip
-answers the question.
+The chip above the input sends a sample message in one click. In the first one,
+the consultant job has no company, so you can see how each backend asks for it.
+The next chip answers the question. After "Yes", you get the CV as a PDF.
+
+### Production build
+
+`bun run dev` compiles each page on its first request. For a talk or a demo,
+a production build is faster:
+
+```bash
+cd demo
+bun install
+bun run build                # type-checks and builds into .next/
+bun run start                # http://localhost:3000
+bun run start -- -p 3001     # if port 3000 is busy (e.g. dev is running)
+```
+
+`next start` reads the same `.env.local`. Where the data lives:
+
+- conversations and working memory: `mastra.db` (SQLite through libsql; set
+  `MASTRA_DB_URL` to use another file or a hosted libsql/Turso database);
+- generated PDFs: the system temp folder (`agents-101-cvs/`), served at
+  `/api/cvs/<id>.pdf`;
+- workflow drafts: in the server's memory (they reset on restart).
+
+So this setup is for one Node process: your laptop or one server. For
+serverless hosting (for example Vercel) you would need a hosted database, shared
+file storage for the PDFs, and a shared store for workflow drafts.
 
 ## Where to look
 

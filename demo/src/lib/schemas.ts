@@ -23,7 +23,14 @@ export const CVSchema = z.object({
 	headline: z
 		.string()
 		.nullable()
-		.describe("One-line professional summary or null"),
+		.describe("Short professional title, e.g. 'AI product architect', or null"),
+	// nullish (not just nullable): the agent's working memory may leave
+	// these keys out, and a missing summary must not block the PDF.
+	location: z.string().nullish().describe("City / country, or null"),
+	summary: z
+		.string()
+		.nullish()
+		.describe("One or two sentences about the person, or null"),
 	skills: z.array(z.string()).min(1),
 	jobs: z.array(JobSchema).min(1),
 });
@@ -48,6 +55,8 @@ export const DraftJobSchema = z.object({
 export const DraftCVSchema = z.object({
 	name: z.string().nullable(),
 	headline: z.string().nullable(),
+	location: z.string().nullable(),
+	summary: z.string().nullable(),
 	skills: z.array(z.string()).nullable(),
 	jobs: z.array(DraftJobSchema).nullable(),
 });
@@ -75,4 +84,3 @@ export const UISpecSchema = z.discriminatedUnion("type", [
 ]);
 
 export type UISpec = z.infer<typeof UISpecSchema>;
-

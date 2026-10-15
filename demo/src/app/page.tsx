@@ -39,7 +39,7 @@ type WorkflowStep = {
 // Stage script. Clicking a chip sends it. The first message has no company
 // on purpose: both backends must notice and ask for it.
 const SUGGESTIONS = [
-	"My name is Aleksandr. For two years I've worked as an AI consultant. Skills: TypeScript, Node, LLMs, on-device ML.",
+	"Hi! I'm Aleksandr Beshkenadze, an AI product architect in Helsinki. Since 2022 I've worked as an AI consultant: agent harnesses, MCP servers, RAG for LegalTech and EdTech. I also co-founded 4xxi (2012–2026) and led its tech team, building FinTech and EdTech products. And I created CaesarApp (2017–2025), an open-source password manager for teams. Skills: TypeScript, Node.js, LLMs, MCP, RAG, vLLM, Kubernetes, on-device ML.",
 	"The company is Denovo.",
 ];
 
@@ -234,8 +234,11 @@ export default function ChatPage() {
 										suggestion={s}
 										onClick={handleSuggestion}
 										disabled={busy}
-										className="chip"
-									/>
+										className="chip max-w-full"
+									>
+										{/* The full text shows in the chat after the click. */}
+										<span className="truncate">{s}</span>
+									</Suggestion>
 								))}
 							</div>
 						)}

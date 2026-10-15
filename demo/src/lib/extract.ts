@@ -16,6 +16,10 @@ export async function extractDraft(text: string): Promise<DraftCV> {
 		prompt: [
 			"Extract CV fields from the message below.",
 			"Use null for any field you cannot infer — never invent a name, company, role, or dates.",
+			"- headline: a short professional title, e.g. 'AI product architect'.",
+			"- summary: one or two sentences in the third person, built only from facts in the message.",
+			"- jobs: one entry per job; years as written, e.g. '2022–now' or '2012–2026'.",
+			"- highlights: up to 3 short phrases per job, only from the message.",
 			"",
 			"Message:",
 			text,

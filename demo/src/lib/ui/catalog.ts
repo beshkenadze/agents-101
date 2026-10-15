@@ -6,7 +6,8 @@ export const catalog = defineCatalog(schema, {
 	components: {
 		CVCard: {
 			props: CVSchema,
-			description: "Render a finalized CV with name, headline, skills, jobs.",
+			description:
+				"Render a finalized CV with name, headline, location, summary, skills, jobs.",
 		},
 		ConfirmCard: {
 			props: ConfirmSchema,

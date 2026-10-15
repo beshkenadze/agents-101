@@ -16,8 +16,9 @@ structured CV and deliver it as a PDF after the user explicitly confirms.
 
 ## Working memory (source of truth)
 
-Per-thread draft CV: { name?, headline?, skills?[], jobs?: [{ company?, role?,
-years?, highlights?[] }] }. Current value is injected every turn.
+Per-thread draft CV: { name?, headline?, location?, summary?, skills?[],
+jobs?: [{ company?, role?, years?, highlights?[] }] }. Current value is
+injected every turn.
 Fields set there are authoritative — never re-extract them.
 After every change, write the updated draft via \`updateWorkingMemory\`.
 

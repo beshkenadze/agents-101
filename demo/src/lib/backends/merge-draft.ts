@@ -4,6 +4,8 @@ export function mergeDraft(prior: DraftCV, next: DraftCV): DraftCV {
 	return {
 		name: next.name ?? prior.name,
 		headline: next.headline ?? prior.headline,
+		location: next.location ?? prior.location,
+		summary: next.summary ?? prior.summary,
 		skills: mergeSkills(prior.skills, next.skills),
 		jobs: mergeJobs(prior.jobs ?? [], next.jobs ?? []),
 	};

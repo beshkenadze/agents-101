@@ -1,11 +1,20 @@
 import type { CV } from "@/lib/schemas";
 
-export function CVCard({ name, headline, skills, jobs }: CV) {
+export function CVCard({
+	name,
+	headline,
+	location,
+	summary,
+	skills,
+	jobs,
+}: CV) {
+	const sub = [headline, location].filter(Boolean).join(" · ");
 	return (
 		<div className="cv-card">
 			<div className="cv-head">
 				<div className="cv-name">{name}</div>
-				<div className="cv-headline">{headline}</div>
+				{sub && <div className="cv-headline">{sub}</div>}
+				{summary && <div className="cv-summary">{summary}</div>}
 			</div>
 
 			<div className="cv-section">
