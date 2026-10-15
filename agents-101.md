@@ -4,10 +4,10 @@
 
 | | |
 |---|---|
-| **Version** | `2026.10.15-305a574` |
+| **Version** | `2026.10.15-0acd582` |
 | **State** | Branch `talk-texts-2`, **not merged to `main` yet** — the published deck is older. |
 | **Format** | 20 min · live demo · 20 slides |
-| **Speaker notes** | 1829 words ≈ 15:19 at 120 wpm (budget 19 min) |
+| **Speaker notes** | 1830 words ≈ 15:20 at 120 wpm (budget 19 min) |
 | **Slides** | https://beshkenadze.github.io/agents-101/ |
 | **Code** | https://github.com/beshkenadze/agents-101 |
 
@@ -23,9 +23,9 @@ Notes only — clicks, pauses and the live demo add time on top.
 | 01 · Completion vs. agents | 3–6 | 3:12 ⚠️ | 3:00 |
 | 02 · Structured output & tools | 7–9 | 2:57 | 4:00 |
 | 03 · Workflow vs. agent · orchestration | 10–11 | 1:37 | 2:00 |
-| 04 · Live demo — CV generator | 12–18 | 5:26 | 8:00 |
+| 04 · Live demo — CV generator | 12–18 | 5:27 | 8:00 |
 | end · Wrap-up | 19–20 | 0:52 | 1:00 |
-| **Total** | 1–20 | **15:19** | **19:00** |
+| **Total** | 1–20 | **15:20** | **19:00** |
 
 ## Slides
 
@@ -546,7 +546,7 @@ Here is a quick map. The chat sends a message to one API route. A flag picks the
 
 ## 14 · Demo input
 
-`/demo/chat` · notes: 60 words ≈ 0:30
+`/demo/chat` · notes: 61 words ≈ 0:31
 
 ### On screen
 
@@ -557,13 +557,12 @@ Here is a quick map. The chat sends a message to one API route. A flag picks the
 `chat · new message`
 
 user ▍ My name is Aleksandr.  
- 20+ years in product architecture — LLM, AI, ML, zero-knowledge security.  
- At Denovo: consulting for LegalTech and EdTech startups.  
- Stack: TypeScript, Node, Tauri, Electron, on-device ML, LoRA fine-tuning.  
+ For two years I've worked as an AI consultant.  
+ Skills: TypeScript, Node, LLMs, on-device ML.  
  ── goal ──────────────────────────────  
  output: a structured CV { name, headline, skills\[\], jobs\[\] }  
 
-We send this to both backends — and watch how each one gets there.
+No company name — on purpose. Both backends get this message.
 
 ### Say
 
@@ -571,7 +570,7 @@ The input is just a chat message — like you would describe yourself to a perso
 
 **[click]** The goal is a typed CV object: name, headline, skills, and jobs.
 
-**[click]** One trick: I will leave out the company name. Then we see how each backend handles missing data. The workflow asks a question that we wrote in code. The agent decides by itself.
+**[click]** One trick: there is no company name in the message. Then we see how each backend handles missing data. The workflow asks a question that we wrote in code. The agent decides by itself.
 
 ---
 
@@ -590,7 +589,7 @@ The input is just a chat message — like you would describe yourself to a perso
 `workflows/cv-workflow.ts`
 
 ```ts
-export const cvWorkflow = createWorkflow({ id: "cv-workflow", inputSchema })
+export const cvWorkflow = createWorkflow({ id: "cv-workflow", inputSchema, outputSchema })
   .then(extract)    // 1 × Output.object → DraftCVSchema · gpt-6-luna
   .then(merge)      // plain code — keep fields already filled
   .then(validate)   // CVSchema.safeParse → { valid, issue }
@@ -641,7 +640,7 @@ Every step was visible, and every step was our code.
 
 ```ts
 export const cvAgent = new Agent({
-  id:    "cv-agent",
+  id: "cv-agent", name: "CV Agent",
   model: "openai/gpt-6-sol",
   instructions: `
     You are a CV-building agent. Extract → validate → confirm → generate.
@@ -699,6 +698,7 @@ export const memory = new Memory({
   options: {
     workingMemory: {
       enabled: true,
+      scope: "thread",       // per conversation
       schema: DraftCVSchema, // same Zod schema
     },
   },
@@ -851,6 +851,7 @@ Changes to the slides, newest first.
 
 | Date | Commit | Change |
 |---|---|---|
+| 2026-10-15 | [`0acd582`](https://github.com/beshkenadze/agents-101/commit/0acd582) | slides: fact-check fixes |
 | 2026-10-15 | [`305a574`](https://github.com/beshkenadze/agents-101/commit/305a574) | slides: drop the first-talk remark, "generates text" on slide 5 |
 | 2026-10-14 | [`12beb13`](https://github.com/beshkenadze/agents-101/commit/12beb13) | demo: lock the mode badge per conversation, update stage directions |
 | 2026-10-14 | [`5aaa2d6`](https://github.com/beshkenadze/agents-101/commit/5aaa2d6) | slides: teaser for the next talk, Make Your Decision |
