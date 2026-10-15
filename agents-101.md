@@ -4,10 +4,10 @@
 
 | | |
 |---|---|
-| **Version** | `2026.10.14-12beb13` |
-| **State** | Branch `talk-texts`, **not merged to `main` yet** — the published deck is older. |
+| **Version** | `2026.10.15-305a574` |
+| **State** | Branch `talk-texts-2`, **not merged to `main` yet** — the published deck is older. |
 | **Format** | 20 min · live demo · 20 slides |
-| **Speaker notes** | 1842 words ≈ 15:26 at 120 wpm (budget 19 min) |
+| **Speaker notes** | 1829 words ≈ 15:19 at 120 wpm (budget 19 min) |
 | **Slides** | https://beshkenadze.github.io/agents-101/ |
 | **Code** | https://github.com/beshkenadze/agents-101 |
 
@@ -19,13 +19,13 @@ Notes only — clicks, pauses and the live demo add time on top.
 
 | Section | Slides | Notes | Budget |
 |---|---|---|---|
-| 00 · Intro & agenda | 1–2 | 1:22 ⚠️ | 1:00 |
+| 00 · Intro & agenda | 1–2 | 1:15 ⚠️ | 1:00 |
 | 01 · Completion vs. agents | 3–6 | 3:12 ⚠️ | 3:00 |
 | 02 · Structured output & tools | 7–9 | 2:57 | 4:00 |
 | 03 · Workflow vs. agent · orchestration | 10–11 | 1:37 | 2:00 |
 | 04 · Live demo — CV generator | 12–18 | 5:26 | 8:00 |
 | end · Wrap-up | 19–20 | 0:52 | 1:00 |
-| **Total** | 1–20 | **15:26** | **19:00** |
+| **Total** | 1–20 | **15:19** | **19:00** |
 
 ## Slides
 
@@ -56,7 +56,7 @@ Notes only — clicks, pauses and the live demo add time on top.
 
 ## 01 · Agents 101
 
-`/talks/agents-101` · notes: 129 words ≈ 1:05
+`/talks/agents-101` · notes: 116 words ≈ 0:58
 
 ### On screen
 
@@ -71,8 +71,6 @@ From a simple API call to a working AI agent — step by step.
 ### Say
 
 Hi! I'm Aleksandr. I've been an independent developer for more than 20 years.
-
-This is my first talk in English — so please be kind to me.
 
 You use AI agents every day — directly or indirectly. Maybe you want to know how they are built.
 
@@ -218,7 +216,7 @@ This is where an agent comes in. It's the same model and the same call. But now 
 
 The model picks a tool, looks at the result, and decides what to do next. Again and again, until the task is done.
 
-**[click]** The model still just predicts text. But the loop makes it look like it decides.
+**[click]** The model still just generates text. But the loop makes it look like it decides.
 
 ---
 
@@ -853,6 +851,7 @@ Changes to the slides, newest first.
 
 | Date | Commit | Change |
 |---|---|---|
+| 2026-10-15 | [`305a574`](https://github.com/beshkenadze/agents-101/commit/305a574) | slides: drop the first-talk remark, "generates text" on slide 5 |
 | 2026-10-14 | [`12beb13`](https://github.com/beshkenadze/agents-101/commit/12beb13) | demo: lock the mode badge per conversation, update stage directions |
 | 2026-10-14 | [`5aaa2d6`](https://github.com/beshkenadze/agents-101/commit/5aaa2d6) | slides: teaser for the next talk, Make Your Decision |
 | 2026-10-14 | [`3532785`](https://github.com/beshkenadze/agents-101/commit/3532785) | Second review pass: B2-level notes, slide fixes, readable inline code |
