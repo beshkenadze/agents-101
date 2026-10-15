@@ -4,10 +4,10 @@
 
 | | |
 |---|---|
-| **Version** | `2026.10.15-200f96d` |
+| **Version** | `2026.10.15-927e17a` |
 | **State** | Branch `demo-cv-pdf`, **not merged to `main` yet** — the published deck is older. |
 | **Format** | 20 min · live demo · 20 slides |
-| **Speaker notes** | 1848 words ≈ 15:28 at 120 wpm (budget 19 min) |
+| **Speaker notes** | 1908 words ≈ 15:58 at 120 wpm (budget 19 min) |
 | **Slides** | https://beshkenadze.github.io/agents-101/ |
 | **Code** | https://github.com/beshkenadze/agents-101 |
 
@@ -23,9 +23,9 @@ Notes only — clicks, pauses and the live demo add time on top.
 | 01 · Completion vs. agents | 3–6 | 3:12 ⚠️ | 3:00 |
 | 02 · Structured output & tools | 7–9 | 2:57 | 4:00 |
 | 03 · Workflow vs. agent · orchestration | 10–11 | 1:37 | 2:00 |
-| 04 · Live demo — CV generator | 12–18 | 5:35 | 8:00 |
+| 04 · Live demo — CV generator | 12–18 | 6:05 | 8:00 |
 | end · Wrap-up | 19–20 | 0:52 | 1:00 |
-| **Total** | 1–20 | **15:28** | **19:00** |
+| **Total** | 1–20 | **15:58** | **19:00** |
 
 ## Slides
 
@@ -581,7 +581,7 @@ The input is just a chat message — like you would describe yourself to a perso
 
 ## 15 · Demo — workflow backend
 
-`/demo/workflow.ts` · notes: 122 words ≈ 1:01
+`/demo/workflow.ts` · notes: 156 words ≈ 1:18
 
 ### On screen
 
@@ -625,7 +625,15 @@ Let's see it live.
 
 Look at the steps: extract, merge, validate… and it asks which company I worked for as an AI consultant.
 
-**▶ Click "The company is Denovo." → Yes on the card → open the PDF**
+**▶ Click "The company is 4xxi." → the CV card appears**
+
+Now I want to change something: remove CaesarApp and make the summary shorter.
+
+**▶ Click "No — remove CaesarApp…"**
+
+The workflow can't do it. There is no step for edits — I didn't write one. It can only make the PDF.
+
+**▶ Yes on the card → open the PDF**
 
 Every step was visible, and every step was our code.
 
@@ -637,7 +645,7 @@ Every step was visible, and every step was our code.
 
 ## 16 · Demo — agent backend
 
-`/demo/agent.ts` · notes: 191 words ≈ 1:36
+`/demo/agent.ts` · notes: 217 words ≈ 1:49
 
 ### On screen
 
@@ -685,9 +693,17 @@ Let's run the same message with the agent.
 
 Look at the tool calls: extract, save to memory, validate… It finds the missing company and asks for it.
 
-**▶ Click "The company is Denovo." → point at webSearch if it runs → Yes on the card → open the PDF**
+**▶ Click "The company is 4xxi." → point at webSearch if it runs → the CV card appears**
 
-Same input, same PDF — but a different path. More tool calls, more tokens. This is the price of flexibility.
+Now the same change request.
+
+**▶ Click "No — remove CaesarApp…"**
+
+The agent changes the CV: CaesarApp is gone, the summary is shorter. Nobody wrote code for this.
+
+**▶ Yes on the card → open the PDF**
+
+Same input — but a different path. The agent handled a request I didn't plan for. The price: more tool calls and more tokens.
 
 **◀ BACK TO THE SLIDES → next slide: working memory. The browser stays open, we don't go back to it.**
 
@@ -866,6 +882,7 @@ Changes to the slides, newest first.
 
 | Date | Commit | Change |
 |---|---|---|
+| 2026-10-15 | [`927e17a`](https://github.com/beshkenadze/agents-101/commit/927e17a) | demo: "4xxi" answer and an edit step that shows agent vs workflow |
 | 2026-10-15 | [`200f96d`](https://github.com/beshkenadze/agents-101/commit/200f96d) | slides: explicit switch-to-browser / back-to-slides lines in the demo notes |
 | 2026-10-15 | [`d3a25fb`](https://github.com/beshkenadze/agents-101/commit/d3a25fb) | demo: a fuller CV and a better-looking PDF; README: production build |
 | 2026-10-15 | [`0acd582`](https://github.com/beshkenadze/agents-101/commit/0acd582) | slides: fact-check fixes |
