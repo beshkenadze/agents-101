@@ -527,22 +527,21 @@ status: "§ input"
 </div>
 <div class="tbody">
 <span class="line"><span class="prompt">user ▍</span> My name is Aleksandr.</span>
-<span class="line" style="padding-left: 84px;">20+ years in product architecture — LLM, AI, ML, zero-knowledge security.</span>
-<span class="line" style="padding-left: 84px;">At Denovo: consulting for LegalTech and EdTech startups.</span>
-<span class="line" style="padding-left: 84px;">Stack: TypeScript, Node, Tauri, Electron, on-device ML, LoRA fine-tuning.</span>
+<span class="line" style="padding-left: 92px;">For two years I've worked as an AI consultant.</span>
+<span class="line" style="padding-left: 92px;">Skills: TypeScript, Node, LLMs, on-device ML.</span>
 <span class="line" style="margin-top: 18px;" v-click="1"><span class="muted">── goal ──────────────────────────────</span></span>
 <span class="line" v-click="1"><span class="muted">output:</span> a structured CV <span style="color: var(--accent)">&#123; name, headline, skills[], jobs[] &#125;</span></span>
 </div>
 </div>
 
-<p class="body" style="margin-top: 28px; font-size: 22px;" v-click="2">We send this to both backends — and watch how each one gets there.</p>
+<p class="body" style="margin-top: 28px; font-size: 22px;" v-click="2">No company name — on purpose. Both backends get this message.</p>
 
 <!--
 The input is just a chat message — like you would describe yourself to a person.
 
 [click] The goal is a typed CV object: name, headline, skills, and jobs.
 
-[click] One trick: I will leave out the company name. Then we see how each backend handles missing data. The workflow asks a question that we wrote in code. The agent decides by itself.
+[click] One trick: there is no company name in the message. Then we see how each backend handles missing data. The workflow asks a question that we wrote in code. The agent decides by itself.
 -->
 
 ---
@@ -559,7 +558,7 @@ status: "backend · workflow"
 <div class="code-bar"><span class="dots-mini"><i></i><i></i><i></i></span>workflows/cv-workflow.ts</div>
 
 ```ts
-export const cvWorkflow = createWorkflow({ id: "cv-workflow", inputSchema })
+export const cvWorkflow = createWorkflow({ id: "cv-workflow", inputSchema, outputSchema })
   .then(extract)    // 1 × Output.object → DraftCVSchema · gpt-6-luna
   .then(merge)      // plain code — keep fields already filled
   .then(validate)   // CVSchema.safeParse → { valid, issue }
@@ -611,7 +610,7 @@ status: "backend · agent"
 
 ```ts
 export const cvAgent = new Agent({
-  id:    "cv-agent",
+  id: "cv-agent", name: "CV Agent",
   model: "openai/gpt-6-sol",
   instructions: `
     You are a CV-building agent. Extract → validate → confirm → generate.
@@ -674,6 +673,7 @@ export const memory = new Memory({
   options: {
     workingMemory: {
       enabled: true,
+      scope: "thread",       // per conversation
       schema: DraftCVSchema, // same Zod schema
     },
   },
