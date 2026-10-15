@@ -36,8 +36,6 @@ class: 'center-v'
 <!--
 Hi! I'm Aleksandr. I've been an independent developer for more than 20 years.
 
-This is my first talk in English — so please be kind to me.
-
 You use AI agents every day — directly or indirectly. Maybe you want to know how they are built.
 
 In the next 20 minutes, we go from one simple API call to a working agent. We will look at three building blocks: completion, structured output, and tools. Then we put them in a loop. This loop is what makes an agent.
@@ -186,7 +184,7 @@ This is where an agent comes in. It's the same model and the same call. But now 
 
 The model picks a tool, looks at the result, and decides what to do next. Again and again, until the task is done.
 
-[click] The model still just predicts text. But the loop makes it look like it decides.
+[click] The model still just generates text. But the loop makes it look like it decides.
 -->
 
 ---
