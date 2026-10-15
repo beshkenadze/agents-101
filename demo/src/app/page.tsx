@@ -37,10 +37,13 @@ type WorkflowStep = {
 };
 
 // Stage script. Clicking a chip sends it. The first message has no company
-// on purpose: both backends must notice and ask for it.
+// for one job on purpose: both backends must notice and ask for it.
 const SUGGESTIONS = [
 	"Hi! I'm Aleksandr Beshkenadze, an AI product architect in Helsinki. Since 2022 I've worked as an AI consultant: agent harnesses, MCP servers, RAG for LegalTech and EdTech. I also co-founded 4xxi (2012–2026) and led its tech team, building FinTech and EdTech products. And I created CaesarApp (2017–2025), an open-source password manager for teams. Skills: TypeScript, Node.js, LLMs, MCP, RAG, vLLM, Kubernetes, on-device ML.",
-	"The company is Denovo.",
+	"The company is 4xxi.",
+	// A change nobody wrote code for: the agent edits the CV, the workflow
+	// has no step for it.
+	"No — remove CaesarApp and make the summary shorter.",
 ];
 
 function filePartName(url: string) {

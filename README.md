@@ -32,7 +32,9 @@ conversation.
 
 The chip above the input sends a sample message in one click. In the first one,
 the consultant job has no company, so you can see how each backend asks for it.
-The next chip answers the question. After "Yes", you get the CV as a PDF.
+The next chip answers the question. The third chip asks for a change that no
+code path handles: the agent edits the CV, the workflow says it has no step for
+that. After "Yes", you get the CV as a PDF.
 
 ### Production build
 

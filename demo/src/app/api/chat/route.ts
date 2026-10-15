@@ -25,6 +25,8 @@ type Body = {
 
 const APPROVAL_RE =
 	/^\s*(yes|yep|yeah|approve|approved|generate|ok|go|do it|let'?s go)\b/i;
+// "No — remove …", "change …": an edit request at the confirm step.
+const EDIT_RE = /^\s*(no|nope|change|edit|remove|delete|drop|make|rename)\b/i;
 
 type InferChunk<S> = S extends ReadableStream<infer C> ? C : never;
 
@@ -165,6 +167,35 @@ export async function POST(req: Request) {
 						id: `ui-${spec.type}-${crypto.randomUUID().slice(0, 6)}`,
 						data: spec,
 					});
+
+				// Edit request at the confirm step. The workflow has no edit step —
+				// nobody wrote one — so it says so and offers the PDF again.
+				// (The agent handles the same message by editing the CV.)
+				if (priorValid && !isApproval && EDIT_RE.test(userText)) {
+					writeStep(
+						"edit",
+						{ step: 4, label: "branch → no edit step · plain code" },
+						"done",
+					);
+					emitUI({
+						type: "ConfirmCard",
+						props: {
+							field: "generate PDF",
+							question: "Generate the PDF from this CV?",
+							proposedValue: "Yes, generate",
+						},
+					});
+					const id = crypto.randomUUID();
+					writer.write({ type: "text-start", id });
+					writer.write({
+						type: "text-delta",
+						id,
+						delta:
+							"This workflow has no step for edits. It can only make the PDF from this CV.",
+					});
+					writer.write({ type: "text-end", id });
+					return;
+				}
 
 				// Fast-path: user confirmed PDF and we already have a valid CV.
 				if (priorValid && isApproval) {

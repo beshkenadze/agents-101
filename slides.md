@@ -597,7 +597,15 @@ Let's see it live.
 
 Look at the steps: extract, merge, validate… and it asks which company I worked for as an AI consultant.
 
->>> Click "The company is Denovo." → Yes on the card → open the PDF <<<
+>>> Click "The company is 4xxi." → the CV card appears <<<
+
+Now I want to change something: remove CaesarApp and make the summary shorter.
+
+>>> Click "No — remove CaesarApp…" <<<
+
+The workflow can't do it. There is no step for edits — I didn't write one. It can only make the PDF.
+
+>>> Yes on the card → open the PDF <<<
 
 Every step was visible, and every step was our code.
 
@@ -659,9 +667,17 @@ Let's run the same message with the agent.
 
 Look at the tool calls: extract, save to memory, validate… It finds the missing company and asks for it.
 
->>> Click "The company is Denovo." → point at webSearch if it runs → Yes on the card → open the PDF <<<
+>>> Click "The company is 4xxi." → point at webSearch if it runs → the CV card appears <<<
 
-Same input, same PDF — but a different path. More tool calls, more tokens. This is the price of flexibility.
+Now the same change request.
+
+>>> Click "No — remove CaesarApp…" <<<
+
+The agent changes the CV: CaesarApp is gone, the summary is shorter. Nobody wrote code for this.
+
+>>> Yes on the card → open the PDF <<<
+
+Same input — but a different path. The agent handled a request I didn't plan for. The price: more tool calls and more tokens.
 
 >>> ◀ BACK TO THE SLIDES → next slide: working memory. The browser stays open, we don't go back to it. <<<
 -->
