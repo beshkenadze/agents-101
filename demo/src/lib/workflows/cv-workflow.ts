@@ -2,7 +2,7 @@ import { createStep, createWorkflow } from "@mastra/core/workflows";
 import { z } from "zod";
 import { mergeDraft } from "@/lib/backends/merge-draft";
 import { extractDraft } from "@/lib/extract";
-import { CVSchema, DraftCVSchema } from "@/lib/schemas";
+import { CVSchema, type DraftCV, DraftCVSchema } from "@/lib/schemas";
 
 const inputSchema = z.object({
 	userText: z.string(),
@@ -71,7 +71,7 @@ const askStep = createStep({
 		merged: inputData.merged,
 		valid: false,
 		issue: inputData.issue,
-		question: questionFor(inputData.issue ?? ""),
+		question: questionFor(inputData.issue ?? "", inputData.merged),
 	}),
 });
 
@@ -106,13 +106,20 @@ export const cvWorkflow = createWorkflow({
 	])
 	.commit();
 
-function questionFor(path: string): string {
+// Pre-written questions — plain code, no model call.
+function questionFor(path: string, draft: DraftCV): string {
 	if (path === "name") return "What's your full name?";
 	if (path === "headline")
 		return "Give me a one-line professional headline for yourself.";
 	if (path === "skills") return "List a few of your key skills.";
 	if (path.startsWith("jobs")) {
-		if (path.endsWith("company")) return "Which company was that role at?";
+		// "jobs.0.company" → name the role, so the question is clear with
+		// several jobs.
+		const role = draft.jobs?.[Number(path.split(".")[1])]?.role;
+		if (path.endsWith("company"))
+			return role
+				? `Which company did you work for as ${role}?`
+				: "Which company was that role at?";
 		if (path.endsWith("role")) return "What was your job title there?";
 		if (path.endsWith("years"))
 			return "What years did you work there? (e.g. 2020–2023)";

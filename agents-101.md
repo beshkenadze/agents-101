@@ -4,10 +4,10 @@
 
 | | |
 |---|---|
-| **Version** | `2026.10.15-0acd582` |
-| **State** | Branch `talk-texts-2`, **not merged to `main` yet** — the published deck is older. |
+| **Version** | `2026.10.15-927e17a` |
+| **State** | Branch `demo-cv-pdf`, **not merged to `main` yet** — the published deck is older. |
 | **Format** | 20 min · live demo · 20 slides |
-| **Speaker notes** | 1830 words ≈ 15:20 at 120 wpm (budget 19 min) |
+| **Speaker notes** | 1908 words ≈ 15:58 at 120 wpm (budget 19 min) |
 | **Slides** | https://beshkenadze.github.io/agents-101/ |
 | **Code** | https://github.com/beshkenadze/agents-101 |
 
@@ -23,9 +23,9 @@ Notes only — clicks, pauses and the live demo add time on top.
 | 01 · Completion vs. agents | 3–6 | 3:12 ⚠️ | 3:00 |
 | 02 · Structured output & tools | 7–9 | 2:57 | 4:00 |
 | 03 · Workflow vs. agent · orchestration | 10–11 | 1:37 | 2:00 |
-| 04 · Live demo — CV generator | 12–18 | 5:27 | 8:00 |
+| 04 · Live demo — CV generator | 12–18 | 6:05 | 8:00 |
 | end · Wrap-up | 19–20 | 0:52 | 1:00 |
-| **Total** | 1–20 | **15:20** | **19:00** |
+| **Total** | 1–20 | **15:58** | **19:00** |
 
 ## Slides
 
@@ -546,7 +546,7 @@ Here is a quick map. The chat sends a message to one API route. A flag picks the
 
 ## 14 · Demo input
 
-`/demo/chat` · notes: 61 words ≈ 0:31
+`/demo/chat` · notes: 64 words ≈ 0:32
 
 ### On screen
 
@@ -556,21 +556,24 @@ Here is a quick map. The chat sends a message to one API route. A flag picks the
 
 `chat · new message`
 
-user ▍ My name is Aleksandr.  
- For two years I've worked as an AI consultant.  
- Skills: TypeScript, Node, LLMs, on-device ML.  
+user ▍ Hi! I'm Aleksandr Beshkenadze, an AI product architect in Helsinki.  
+ Since 2022 I've worked as an AI consultant: agent harnesses, MCP servers,  
+ RAG for LegalTech and EdTech. I also co-founded 4xxi (2012–2026) and led  
+ its tech team, building FinTech and EdTech products. And I created  
+ CaesarApp (2017–2025), an open-source password manager for teams.  
+ Skills: TypeScript, Node.js, LLMs, MCP, RAG, vLLM, Kubernetes, on-device ML.  
  ── goal ──────────────────────────────  
- output: a structured CV { name, headline, skills\[\], jobs\[\] }  
+ output: a structured CV { name, headline, location, summary, skills\[\], jobs\[\] }  
 
-No company name — on purpose. Both backends get this message.
+The consultant job has no company — on purpose. Both backends get this message.
 
 ### Say
 
 The input is just a chat message — like you would describe yourself to a person.
 
-**[click]** The goal is a typed CV object: name, headline, skills, and jobs.
+**[click]** The goal is a typed CV object: name, headline, location, summary, skills, and jobs.
 
-**[click]** One trick: there is no company name in the message. Then we see how each backend handles missing data. The workflow asks a question that we wrote in code. The agent decides by itself.
+**[click]** One trick: I don't say where I work as a consultant. Then we see how each backend handles missing data. The workflow asks a question that we wrote in code. The agent decides by itself.
 
 ---
 
@@ -578,7 +581,7 @@ The input is just a chat message — like you would describe yourself to a perso
 
 ## 15 · Demo — workflow backend
 
-`/demo/workflow.ts` · notes: 115 words ≈ 0:58
+`/demo/workflow.ts` · notes: 156 words ≈ 1:18
 
 ### On screen
 
@@ -614,13 +617,27 @@ Extract is the only model call. It uses gpt-6-luna — the cheapest model, with 
 
 **[click]** And every path is in our code — no surprises.
 
-**▶ LIVE: ⌘K (new conversation) → click the badge to "mode: workflow" → click the suggestion (it sends)**
+Let's see it live.
 
-Look at the steps: extract, merge, validate… and it asks: "Which company was that role at?"
+**▶ SWITCH TO THE BROWSER (the demo app)**
 
-**▶ Click "The company is Denovo." → Yes on the card → open the PDF**
+**▶ ⌘K (new conversation) → click the badge to "mode: workflow" → click the suggestion (it sends)**
+
+Look at the steps: extract, merge, validate… and it asks which company I worked for as an AI consultant.
+
+**▶ Click "The company is 4xxi." → the CV card appears**
+
+Now I want to change something: remove CaesarApp and make the summary shorter.
+
+**▶ Click "No — remove CaesarApp…"**
+
+The workflow can't do it. There is no step for edits — I didn't write one. It can only make the PDF.
+
+**▶ Yes on the card → open the PDF**
 
 Every step was visible, and every step was our code.
+
+**◀ BACK TO THE SLIDES → next slide: the agent**
 
 ---
 
@@ -628,7 +645,7 @@ Every step was visible, and every step was our code.
 
 ## 16 · Demo — agent backend
 
-`/demo/agent.ts` · notes: 183 words ≈ 1:32
+`/demo/agent.ts` · notes: 217 words ≈ 1:49
 
 ### On screen
 
@@ -668,13 +685,27 @@ There are five tools. Four of them do the same jobs as the workflow steps. The f
 
 **[click]** The price: more model calls, and less predictable results.
 
-**▶ LIVE: ⌘K (new conversation, starts in "mode: agent") → click the suggestion (it sends)**
+Let's run the same message with the agent.
+
+**▶ SWITCH TO THE BROWSER**
+
+**▶ ⌘K (new conversation, starts in "mode: agent") → click the suggestion (it sends)**
 
 Look at the tool calls: extract, save to memory, validate… It finds the missing company and asks for it.
 
-**▶ Click "The company is Denovo." → point at webSearch if it runs → Yes on the card → open the PDF**
+**▶ Click "The company is 4xxi." → point at webSearch if it runs → the CV card appears**
 
-Same input, same PDF — but a different path. More tool calls, more tokens. This is the price of flexibility.
+Now the same change request.
+
+**▶ Click "No — remove CaesarApp…"**
+
+The agent changes the CV: CaesarApp is gone, the summary is shorter. Nobody wrote code for this.
+
+**▶ Yes on the card → open the PDF**
+
+Same input — but a different path. The agent handled a request I didn't plan for. The price: more tool calls and more tokens.
+
+**◀ BACK TO THE SLIDES → next slide: working memory. The browser stays open, we don't go back to it.**
 
 ---
 
@@ -851,6 +882,9 @@ Changes to the slides, newest first.
 
 | Date | Commit | Change |
 |---|---|---|
+| 2026-10-15 | [`927e17a`](https://github.com/beshkenadze/agents-101/commit/927e17a) | demo: "4xxi" answer and an edit step that shows agent vs workflow |
+| 2026-10-15 | [`200f96d`](https://github.com/beshkenadze/agents-101/commit/200f96d) | slides: explicit switch-to-browser / back-to-slides lines in the demo notes |
+| 2026-10-15 | [`d3a25fb`](https://github.com/beshkenadze/agents-101/commit/d3a25fb) | demo: a fuller CV and a better-looking PDF; README: production build |
 | 2026-10-15 | [`0acd582`](https://github.com/beshkenadze/agents-101/commit/0acd582) | slides: fact-check fixes |
 | 2026-10-15 | [`305a574`](https://github.com/beshkenadze/agents-101/commit/305a574) | slides: drop the first-talk remark, "generates text" on slide 5 |
 | 2026-10-14 | [`12beb13`](https://github.com/beshkenadze/agents-101/commit/12beb13) | demo: lock the mode badge per conversation, update stage directions |

@@ -526,22 +526,25 @@ status: "§ input"
 <span>chat · new message</span>
 </div>
 <div class="tbody">
-<span class="line"><span class="prompt">user ▍</span> My name is Aleksandr.</span>
-<span class="line" style="padding-left: 92px;">For two years I've worked as an AI consultant.</span>
-<span class="line" style="padding-left: 92px;">Skills: TypeScript, Node, LLMs, on-device ML.</span>
+<span class="line"><span class="prompt">user ▍</span> Hi! I'm Aleksandr Beshkenadze, an AI product architect in Helsinki.</span>
+<span class="line" style="padding-left: 92px;">Since 2022 I've worked as an AI consultant: agent harnesses, MCP servers,</span>
+<span class="line" style="padding-left: 92px;">RAG for LegalTech and EdTech. I also co-founded 4xxi (2012–2026) and led</span>
+<span class="line" style="padding-left: 92px;">its tech team, building FinTech and EdTech products. And I created</span>
+<span class="line" style="padding-left: 92px;">CaesarApp (2017–2025), an open-source password manager for teams.</span>
+<span class="line" style="padding-left: 92px;">Skills: TypeScript, Node.js, LLMs, MCP, RAG, vLLM, Kubernetes, on-device ML.</span>
 <span class="line" style="margin-top: 18px;" v-click="1"><span class="muted">── goal ──────────────────────────────</span></span>
-<span class="line" v-click="1"><span class="muted">output:</span> a structured CV <span style="color: var(--accent)">&#123; name, headline, skills[], jobs[] &#125;</span></span>
+<span class="line" v-click="1"><span class="muted">output:</span> a structured CV <span style="color: var(--accent)">&#123; name, headline, location, summary, skills[], jobs[] &#125;</span></span>
 </div>
 </div>
 
-<p class="body" style="margin-top: 28px; font-size: 22px;" v-click="2">No company name — on purpose. Both backends get this message.</p>
+<p class="body" style="margin-top: 28px; font-size: 22px;" v-click="2">The consultant job has no company — on purpose. Both backends get this message.</p>
 
 <!--
 The input is just a chat message — like you would describe yourself to a person.
 
-[click] The goal is a typed CV object: name, headline, skills, and jobs.
+[click] The goal is a typed CV object: name, headline, location, summary, skills, and jobs.
 
-[click] One trick: there is no company name in the message. Then we see how each backend handles missing data. The workflow asks a question that we wrote in code. The agent decides by itself.
+[click] One trick: I don't say where I work as a consultant. Then we see how each backend handles missing data. The workflow asks a question that we wrote in code. The agent decides by itself.
 -->
 
 ---
@@ -586,13 +589,27 @@ Extract is the only model call. It uses gpt-6-luna — the cheapest model, with 
 
 [click] And every path is in our code — no surprises.
 
->>> LIVE: ⌘K (new conversation) → click the badge to "mode: workflow" → click the suggestion (it sends) <<<
+Let's see it live.
 
-Look at the steps: extract, merge, validate… and it asks: "Which company was that role at?"
+>>> ▶ SWITCH TO THE BROWSER (the demo app) <<<
 
->>> Click "The company is Denovo." → Yes on the card → open the PDF <<<
+>>> ⌘K (new conversation) → click the badge to "mode: workflow" → click the suggestion (it sends) <<<
+
+Look at the steps: extract, merge, validate… and it asks which company I worked for as an AI consultant.
+
+>>> Click "The company is 4xxi." → the CV card appears <<<
+
+Now I want to change something: remove CaesarApp and make the summary shorter.
+
+>>> Click "No — remove CaesarApp…" <<<
+
+The workflow can't do it. There is no step for edits — I didn't write one. It can only make the PDF.
+
+>>> Yes on the card → open the PDF <<<
 
 Every step was visible, and every step was our code.
+
+>>> ◀ BACK TO THE SLIDES → next slide: the agent <<<
 -->
 
 ---
@@ -642,13 +659,27 @@ There are five tools. Four of them do the same jobs as the workflow steps. The f
 
 [click] The price: more model calls, and less predictable results.
 
->>> LIVE: ⌘K (new conversation, starts in "mode: agent") → click the suggestion (it sends) <<<
+Let's run the same message with the agent.
+
+>>> ▶ SWITCH TO THE BROWSER <<<
+
+>>> ⌘K (new conversation, starts in "mode: agent") → click the suggestion (it sends) <<<
 
 Look at the tool calls: extract, save to memory, validate… It finds the missing company and asks for it.
 
->>> Click "The company is Denovo." → point at webSearch if it runs → Yes on the card → open the PDF <<<
+>>> Click "The company is 4xxi." → point at webSearch if it runs → the CV card appears <<<
 
-Same input, same PDF — but a different path. More tool calls, more tokens. This is the price of flexibility.
+Now the same change request.
+
+>>> Click "No — remove CaesarApp…" <<<
+
+The agent changes the CV: CaesarApp is gone, the summary is shorter. Nobody wrote code for this.
+
+>>> Yes on the card → open the PDF <<<
+
+Same input — but a different path. The agent handled a request I didn't plan for. The price: more tool calls and more tokens.
+
+>>> ◀ BACK TO THE SLIDES → next slide: working memory. The browser stays open, we don't go back to it. <<<
 -->
 
 ---

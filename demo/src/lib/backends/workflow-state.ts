@@ -9,6 +9,8 @@ const store = new Map<string, { draft: DraftCV }>();
 const emptyDraft = (): DraftCV => ({
 	name: null,
 	headline: null,
+	location: null,
+	summary: null,
 	skills: null,
 	jobs: null,
 });
